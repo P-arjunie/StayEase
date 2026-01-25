@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
+import { registerWithEmail, createUserProfile } from './config/firebase';
 
 const LandlordRegistration = ({ navigation }) => {
 	const [fullName, setFullName] = useState('');
@@ -26,7 +27,7 @@ const LandlordRegistration = ({ navigation }) => {
 		}
 	};
 
-	const handleRegister = () => {
+	const handleRegister = async () => {
 		if (!fullName || !email || !mobile || !password || !confirmPassword || !nic || !address || !propertyLocation) {
 			alert('Please fill all required fields');
 			return;
@@ -43,7 +44,27 @@ const LandlordRegistration = ({ navigation }) => {
 			alert('Please accept terms and conditions');
 			return;
 		}
-		alert('Landlord Registration Successful!');
+
+		try {
+			const user = await registerWithEmail(email, password);
+			const profile = {
+				role: 'landlord',
+				fullName,
+				email,
+				mobile,
+				nic,
+				address,
+				propertyLocation,
+				proofUri,
+				createdAt: new Date().toISOString(),
+			};
+			await createUserProfile(user.uid, profile);
+			alert('Landlord registration successful');
+			navigation.navigate('Login');
+		} catch (err) {
+			console.error(err);
+			alert('Registration failed: ' + (err.message || err));
+		}
 	};
 
 	return (

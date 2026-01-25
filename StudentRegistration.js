@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { Picker } from '@react-native-picker/picker';
+import { registerWithEmail, createUserProfile } from './config/firebase';
 
 const StudentRegistration = ({ navigation }) => {
 	const [fullName, setFullName] = useState('');
@@ -16,7 +17,7 @@ const StudentRegistration = ({ navigation }) => {
 	const [accommodation, setAccommodation] = useState('room');
 	const [termsAccepted, setTermsAccepted] = useState(false);
 
-	const handleRegister = () => {
+	const handleRegister = async () => {
 		if (!fullName || !email || !mobile || !password || !confirmPassword) {
 			alert('Please fill all required fields');
 			return;
@@ -29,7 +30,29 @@ const StudentRegistration = ({ navigation }) => {
 			alert('Please accept terms and conditions');
 			return;
 		}
-		alert('Student Registration Successful!');
+
+		try {
+			const user = await registerWithEmail(email, password);
+			const profile = {
+				role: 'student',
+				fullName,
+				email,
+				mobile,
+				university,
+				faculty,
+				studentId,
+				preferredLocation: location,
+				budgetRange: budget,
+				accommodationType: accommodation,
+				createdAt: new Date().toISOString(),
+			};
+			await createUserProfile(user.uid, profile);
+			alert('Student registration successful');
+			navigation.navigate('Login');
+		} catch (err) {
+			console.error(err);
+			alert('Registration failed: ' + (err.message || err));
+		}
 	};
 
 	return (
