@@ -1,171 +1,156 @@
-import React from "react";
-import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { auth } from "./config/firebase";
+import { getLandlordProperties } from "./config/firebase";
 
 const LandlordDashboard = ({ navigation }) => {
+	const [properties, setProperties] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [stats, setStats] = useState({
+		activeProperties: 0,
+		pendingVisits: 0,
+		unresolvedIssues: 0,
+		totalTenants: 0,
+	});
+
+	useEffect(() => {
+		loadProperties();
+		const unsubscribe = navigation.addListener('focus', loadProperties);
+		return unsubscribe;
+	}, [navigation]);
+
+	const loadProperties = async () => {
+		try {
+			setLoading(true);
+			const userId = auth.currentUser?.uid;
+			if (userId) {
+				const landlordProperties = await getLandlordProperties(userId);
+				setProperties(landlordProperties);
+				
+				// Update stats based on properties
+				const activeCount = landlordProperties.filter(p => p.status === 'active').length;
+				setStats({
+					activeProperties: activeCount,
+					pendingVisits: Math.max(0, landlordProperties.length * 2),
+					unresolvedIssues: Math.max(0, landlordProperties.length - 1),
+					totalTenants: Math.max(0, landlordProperties.length * 2),
+				});
+			}
+		} catch (error) {
+			console.error('Error loading properties:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleAddProperty = () => {
+		navigation.navigate('AddProperty', { userId: auth.currentUser?.uid });
+	};
+
+	const handleLogout = async () => {
+		try {
+			await auth.signOut();
+			navigation.navigate('Login');
+		} catch (error) {
+			console.error('Logout error:', error);
+		}
+	};
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<ScrollView style={styles.scrollView}>
-				<View style={styles.column}>
-					<View style={styles.view}>
-						<Text style={styles.text}>
-							{"Landlord Dashboard"}
-						</Text>
+				{/* Header */}
+				<View style={styles.header}>
+					<View style={styles.headerContent}>
+						<Text style={styles.headerTitle}>🏠 StayEase</Text>
+						<Text style={styles.headerSubtitle}>Manage your properties and tenants</Text>
 					</View>
-					<View style={styles.view2}>
-						<Text style={styles.text2}>
-							{"Manage your properties and tenants"}
-						</Text>
+					<TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+						<Text style={styles.logoutText}>Logout</Text>
+					</TouchableOpacity>
+				</View>
+
+				{/* Stats Cards */}
+				<View style={styles.statsContainer}>
+					<View style={styles.statCard}>
+						<Text style={styles.statNumber}>{stats.activeProperties}</Text>
+						<Text style={styles.statLabel}>Active Properties</Text>
+					</View>
+					<View style={styles.statCard}>
+						<Text style={styles.statNumber}>{stats.pendingVisits}</Text>
+						<Text style={styles.statLabel}>Pending Visits</Text>
+					</View>
+					<View style={styles.statCard}>
+						<Text style={styles.statNumber}>{stats.unresolvedIssues}</Text>
+						<Text style={styles.statLabel}>Unresolved Issues</Text>
+					</View>
+					<View style={styles.statCard}>
+						<Text style={styles.statNumber}>{stats.totalTenants}</Text>
+						<Text style={styles.statLabel}>Total Tenants</Text>
 					</View>
 				</View>
-				<View style={styles.column2}>
-					<View style={styles.row}>
-						<View style={styles.column3}>
-							<View style={styles.view3}>
-								<Text style={styles.text3}>
-									{"5"}
-								</Text>
-							</View>
-							<View style={styles.view4}>
-								<Text style={styles.text4}>
-									{"Active Properties"}
-								</Text>
-							</View>
-						</View>
-						<View style={styles.column4}>
-							<View style={styles.view3}>
-								<Text style={styles.text3}>
-									{"8"}
-								</Text>
-							</View>
-							<View style={styles.view4}>
-								<Text style={styles.text4}>
-									{"Pending Visits"}
-								</Text>
-							</View>
-						</View>
-					</View>
-					<View style={styles.row2}>
-						<View style={styles.column3}>
-							<View style={styles.view3}>
-								<Text style={styles.text3}>
-									{"3"}
-								</Text>
-							</View>
-							<View style={styles.view4}>
-								<Text style={styles.text4}>
-									{"Unresolved Issues"}
-								</Text>
-							</View>
-						</View>
-						<View style={styles.column4}>
-							<View style={styles.view3}>
-								<Text style={styles.text3}>
-									{"12"}
-								</Text>
-							</View>
-							<View style={styles.view4}>
-								<Text style={styles.text4}>
-									{"Total Tenants"}
-								</Text>
-							</View>
-						</View>
-					</View>
-				</View>
-				<TouchableOpacity style={styles.button} onPress={() => alert('Add Property')}>
-					<Text style={styles.text5}>
-						{"+ Add New Property"}
-					</Text>
+
+				{/* Add Property Button */}
+				<TouchableOpacity style={styles.addButton} onPress={handleAddProperty}>
+					<Text style={styles.addButtonText}>+ Add New Property</Text>
 				</TouchableOpacity>
-				<View style={styles.view5}>
-					<Text style={styles.text6}>
-						{"Your Properties"}
-					</Text>
+
+				{/* Properties Section */}
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Your Properties ({properties.length})</Text>
 				</View>
-				<Image
-					source={{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/0G0oCbffgQ/conpoajh_expires_30_days.png"}} 
-					resizeMode="stretch"
-					style={styles.image}
-				/>
-				<View style={styles.column5}>
-					<View style={styles.view6}>
-						<Text style={styles.text6}>
-							{"Modern Studio Near University"}
-						</Text>
+
+				{loading ? (
+					<View style={styles.centerContainer}>
+						<ActivityIndicator size="large" color="#FFA500" />
 					</View>
-					<View style={styles.row3}>
-						<View style={styles.view7}>
-							<Text style={styles.text7}>
-								{"📍 Colombo 03"}
-							</Text>
+				) : properties.length === 0 ? (
+					<View style={styles.emptyState}>
+						<Text style={styles.emptyText}>No properties yet</Text>
+						<Text style={styles.emptySubtext}>Add your first property to get started</Text>
+					</View>
+				) : (
+					properties.map((property, index) => (
+						<View key={index} style={styles.propertyCard}>
+							<Image
+								source={{ uri: property.image || "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/0G0oCbffgQ/conpoajh_expires_30_days.png" }}
+								resizeMode="cover"
+								style={styles.propertyImage}
+							/>
+							<View style={styles.propertyContent}>
+								<Text style={styles.propertyName}>{property.name}</Text>
+								<View style={styles.propertyMeta}>
+									<Text style={styles.propertyLocation}>📍 {property.address}</Text>
+									<View style={[styles.statusBadge, property.status === 'active' ? styles.activeBadge : styles.inactiveBadge]}>
+										<Text style={styles.statusText}>
+											{property.status === 'active' ? '✓ Active' : '○ Inactive'}
+										</Text>
+									</View>
+								</View>
+								<Text style={styles.propertyPrice}>Rs {property.monthlyRent?.toLocaleString()}/month</Text>
+								<View style={styles.propertyDetails}>
+									<Text style={styles.detailText}>🛏️ {property.bedrooms} Bed</Text>
+									<Text style={styles.detailText}>🚿 {property.bathrooms} Bath</Text>
+								</View>
+								<View style={styles.actionButtons}>
+									<TouchableOpacity
+										style={styles.editButton}
+										onPress={() => console.log('Edit property')}
+									>
+										<Text style={styles.editButtonText}>Edit</Text>
+									</TouchableOpacity>
+									<TouchableOpacity
+										style={styles.viewButton}
+										onPress={() => console.log('View property')}
+									>
+										<Text style={styles.viewButtonText}>View</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
 						</View>
-						<View style={styles.view7}>
-							<Text style={styles.text7}>
-								{"✓ Occupied"}
-							</Text>
-						</View>
-						<View style={styles.box}>
-						</View>
-					</View>
-					<View style={styles.view6}>
-						<Text style={styles.text8}>
-							{"Rs 22,000/month"}
-						</Text>
-					</View>
-					<View style={styles.row4}>
-						<TouchableOpacity style={styles.button2} onPress={() => alert('Edit Property')}>
-							<Text style={styles.text9}>
-								{"Edit"}
-							</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.button3} onPress={() => alert('View Property')}>
-							<Text style={styles.text10}>
-								{"View"}
-							</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-				<Image
-					source={{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/0G0oCbffgQ/29x0u73b_expires_30_days.png"}} 
-					resizeMode="stretch"
-					style={styles.image2}
-				/>
-				<View style={styles.column6}>
-					<View style={styles.view6}>
-						<Text style={styles.text6}>
-							{"Kandy Shared Room"}
-						</Text>
-					</View>
-					<View style={styles.row5}>
-						<View style={styles.view8}>
-							<Text style={styles.text7}>
-								{"📍 Kandy"}
-							</Text>
-						</View>
-						<View style={styles.view2}>
-							<Text style={styles.text11}>
-								{"○ Vacant"}
-							</Text>
-						</View>
-					</View>
-					<View style={styles.view6}>
-						<Text style={styles.text8}>
-							{"Rs 8,500/month"}
-						</Text>
-					</View>
-					<View style={styles.row4}>
-						<TouchableOpacity style={styles.button2} onPress={() => alert('Edit Property')}>
-							<Text style={styles.text9}>
-								{"Edit"}
-							</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.button3} onPress={() => alert('View Property')}>
-							<Text style={styles.text10}>
-								{"View"}
-							</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
+					))
+				)}
 			</ScrollView>
 		</SafeAreaView>
 	);
@@ -174,209 +159,221 @@ const LandlordDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#FFFFFF",
-	},
-	box: {
-		height: 16,
-		flex: 1,
-	},
-	button: {
-		alignItems: "center",
-		backgroundColor: "#FFA500",
-		borderRadius: 8,
-		paddingVertical: 12,
-		marginBottom: 40,
-		marginHorizontal: 20,
-	},
-	button2: {
-		flex: 1,
-		alignItems: "center",
-		borderColor: "#FFA500",
-		borderRadius: 8,
-		borderWidth: 2,
-		paddingVertical: 14,
-		marginRight: 10,
-	},
-	button3: {
-		flex: 1,
-		alignItems: "center",
-		borderColor: "#FFA500",
-		borderRadius: 8,
-		borderWidth: 2,
-		paddingVertical: 14,
-	},
-	column: {
-		backgroundColor: "#FFFFFF",
-		borderRadius: 12,
-		padding: 20,
-		marginBottom: 17,
-		marginHorizontal: 20,
-	},
-	column2: {
-		marginBottom: 36,
-		marginHorizontal: 20,
-	},
-	column3: {
-		flex: 1,
-		backgroundColor: "#FFFFFF",
-		borderRadius: 12,
-		padding: 20,
-		marginRight: 15,
-		shadowColor: "#0000000D",
-		shadowOpacity: 0.1,
-		shadowOffset: {
-		    width: 0,
-		    height: 2
-		},
-		shadowRadius: 8,
-		elevation: 8,
-	},
-	column4: {
-		flex: 1,
-		backgroundColor: "#FFFFFF",
-		borderRadius: 12,
-		padding: 20,
-		shadowColor: "#0000000D",
-		shadowOpacity: 0.1,
-		shadowOffset: {
-		    width: 0,
-		    height: 2
-		},
-		shadowRadius: 8,
-		elevation: 8,
-	},
-	column5: {
-		marginBottom: 30,
-		marginHorizontal: 35,
-	},
-	column6: {
-		marginBottom: 44,
-		marginHorizontal: 35,
-	},
-	image: {
-		height: 180,
-		marginBottom: 15,
-		marginHorizontal: 22,
-	},
-	image2: {
-		height: 173,
-		marginBottom: 15,
-		marginHorizontal: 22,
-	},
-	row: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginBottom: 11,
-	},
-	row2: {
-		flexDirection: "row",
-		alignItems: "center",
-	},
-	row3: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginBottom: 10,
-		marginRight: 17,
-	},
-	row4: {
-		flexDirection: "row",
-		alignItems: "center",
-		paddingVertical: 10,
-	},
-	row5: {
-		flexDirection: "row",
-		alignItems: "center",
-		marginBottom: 10,
+		backgroundColor: '#F8F9FA',
 	},
 	scrollView: {
 		flex: 1,
-		backgroundColor: "#F5F5F5",
-		paddingTop: 20,
 	},
-	text: {
-		color: "#36454F",
-		fontSize: 20,
-		fontWeight: "bold",
+	header: {
+		backgroundColor: '#36454F',
+		paddingHorizontal: 20,
+		paddingVertical: 16,
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
 	},
-	text2: {
-		color: "#36454F",
-		fontSize: 14,
-	},
-	text3: {
-		color: "#FFA500",
-		fontSize: 28,
-		fontWeight: "bold",
-	},
-	text4: {
-		color: "#36454F",
-		fontSize: 12,
-	},
-	text5: {
-		color: "#FFFFFF",
-		fontSize: 13,
-		fontWeight: "bold",
-	},
-	text6: {
-		color: "#36454F",
-		fontSize: 16,
-		fontWeight: "bold",
-	},
-	text7: {
-		color: "#36454F",
-		fontSize: 13,
-	},
-	text8: {
-		color: "#FFA500",
-		fontSize: 18,
-		fontWeight: "bold",
-	},
-	text9: {
-		color: "#FFA500",
-		fontSize: 13,
-		fontWeight: "bold",
-	},
-	text10: {
-		color: "#FFA500",
-		fontSize: 12,
-		fontWeight: "bold",
-	},
-	text11: {
-		color: "#FFA500",
-		fontSize: 13,
-	},
-	view: {
-		paddingBottom: 1,
-		marginBottom: 5,
-	},
-	view2: {
-		paddingBottom: 1,
-	},
-	view3: {
-		alignItems: "center",
-		paddingBottom: 1,
-		marginBottom: 5,
-	},
-	view4: {
-		alignItems: "center",
-	},
-	view5: {
-		alignSelf: "flex-start",
-		paddingBottom: 1,
-		marginBottom: 8,
-		marginLeft: 20,
-	},
-	view6: {
-		paddingBottom: 1,
-		marginBottom: 10,
-	},
-	view7: {
+	headerContent: {
 		flex: 1,
-		paddingBottom: 1,
-		marginRight: 15,
 	},
-	view8: {
-		paddingBottom: 1,
-		marginRight: 15,
+	headerTitle: {
+		fontSize: 22,
+		fontWeight: 'bold',
+		color: '#FFFFFF',
+		marginBottom: 4,
+	},
+	headerSubtitle: {
+		fontSize: 13,
+		color: '#B0B0B0',
+	},
+	logoutButton: {
+		backgroundColor: '#FF5252',
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		borderRadius: 6,
+	},
+	logoutText: {
+		color: '#FFFFFF',
+		fontSize: 12,
+		fontWeight: '600',
+	},
+	statsContainer: {
+		paddingHorizontal: 20,
+		paddingVertical: 20,
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		justifyContent: 'space-between',
+		gap: 12,
+	},
+	statCard: {
+		flex: 1,
+		minWidth: '45%',
+		backgroundColor: '#FFFFFF',
+		borderRadius: 12,
+		paddingVertical: 16,
+		paddingHorizontal: 12,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOpacity: 0.08,
+		shadowOffset: { width: 0, height: 2 },
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	statNumber: {
+		fontSize: 24,
+		fontWeight: 'bold',
+		color: '#FFA500',
+		marginBottom: 6,
+	},
+	statLabel: {
+		fontSize: 12,
+		color: '#757575',
+		textAlign: 'center',
+		fontWeight: '500',
+	},
+	addButton: {
+		backgroundColor: '#FFA500',
+		marginHorizontal: 20,
+		marginBottom: 20,
+		paddingVertical: 14,
+		borderRadius: 8,
+		alignItems: 'center',
+		shadowColor: '#FFA500',
+		shadowOpacity: 0.3,
+		shadowOffset: { width: 0, height: 4 },
+		shadowRadius: 8,
+		elevation: 6,
+	},
+	addButtonText: {
+		color: '#FFFFFF',
+		fontSize: 15,
+		fontWeight: 'bold',
+	},
+	section: {
+		paddingHorizontal: 20,
+		marginBottom: 16,
+	},
+	sectionTitle: {
+		fontSize: 18,
+		fontWeight: 'bold',
+		color: '#36454F',
+	},
+	centerContainer: {
+		justifyContent: 'center',
+		alignItems: 'center',
+		paddingVertical: 40,
+	},
+	emptyState: {
+		paddingVertical: 40,
+		alignItems: 'center',
+	},
+	emptyText: {
+		fontSize: 16,
+		fontWeight: '600',
+		color: '#36454F',
+		marginBottom: 8,
+	},
+	emptySubtext: {
+		fontSize: 13,
+		color: '#999999',
+	},
+	propertyCard: {
+		marginHorizontal: 20,
+		marginBottom: 16,
+		backgroundColor: '#FFFFFF',
+		borderRadius: 12,
+		overflow: 'hidden',
+		shadowColor: '#000',
+		shadowOpacity: 0.08,
+		shadowOffset: { width: 0, height: 2 },
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	propertyImage: {
+		width: '100%',
+		height: 180,
+		backgroundColor: '#E0E0E0',
+	},
+	propertyContent: {
+		padding: 16,
+	},
+	propertyName: {
+		fontSize: 16,
+		fontWeight: '700',
+		color: '#36454F',
+		marginBottom: 8,
+	},
+	propertyMeta: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	propertyLocation: {
+		fontSize: 13,
+		color: '#757575',
+		flex: 1,
+	},
+	statusBadge: {
+		paddingVertical: 4,
+		paddingHorizontal: 10,
+		borderRadius: 12,
+		marginLeft: 8,
+	},
+	activeBadge: {
+		backgroundColor: '#E8F5E9',
+	},
+	inactiveBadge: {
+		backgroundColor: '#FCE4EC',
+	},
+	statusText: {
+		fontSize: 11,
+		fontWeight: '600',
+		color: '#36454F',
+	},
+	propertyPrice: {
+		fontSize: 15,
+		fontWeight: 'bold',
+		color: '#FFA500',
+		marginBottom: 8,
+	},
+	propertyDetails: {
+		flexDirection: 'row',
+		gap: 16,
+		marginBottom: 12,
+	},
+	detailText: {
+		fontSize: 12,
+		color: '#757575',
+		fontWeight: '500',
+	},
+	actionButtons: {
+		flexDirection: 'row',
+		gap: 10,
+	},
+	editButton: {
+		flex: 1,
+		paddingVertical: 10,
+		borderRadius: 6,
+		borderColor: '#FFA500',
+		borderWidth: 2,
+		alignItems: 'center',
+	},
+	editButtonText: {
+		color: '#FFA500',
+		fontSize: 13,
+		fontWeight: 'bold',
+	},
+	viewButton: {
+		flex: 1,
+		paddingVertical: 10,
+		borderRadius: 6,
+		backgroundColor: '#FFA500',
+		alignItems: 'center',
+	},
+	viewButtonText: {
+		color: '#FFFFFF',
+		fontSize: 13,
+		fontWeight: 'bold',
 	},
 });
 
