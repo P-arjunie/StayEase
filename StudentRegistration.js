@@ -3,6 +3,7 @@ import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerWithEmail, createUserProfile } from './config/firebase';
 import SelectPicker from './components/SelectPicker';
+import { validateEmail, validateMobile, validatePassword, validateBudgetRange, validateStudentID } from './utils/validations';
 
 const StudentRegistration = ({ navigation }) => {
 	const [fullName, setFullName] = useState('');
@@ -23,10 +24,52 @@ const StudentRegistration = ({ navigation }) => {
 			alert('Please fill all required fields');
 			return;
 		}
+		
+		if (fullName.trim().length < 3) {
+			alert('Full name must be at least 3 characters');
+			return;
+		}
+		
+		if (!validateEmail(email)) {
+			alert('Please enter a valid email address');
+			return;
+		}
+		
+		if (!validateMobile(mobile)) {
+			alert('Please enter a valid mobile number (e.g., +94XXXXXXXXX or 0XXXXXXXXX)');
+			return;
+		}
+		
+		if (!validatePassword(password)) {
+			alert('Password must be at least 8 characters with uppercase, lowercase, and a number');
+			return;
+		}
+		
 		if (password !== confirmPassword) {
 			alert('Passwords do not match');
 			return;
 		}
+		
+		if (university && university.trim().length < 2) {
+			alert('University name must be valid');
+			return;
+		}
+		
+		if (studentId && !validateStudentID(studentId)) {
+			alert('Student ID must contain at least 3 alphanumeric characters');
+			return;
+		}
+		
+		if (budget && !validateBudgetRange(budget)) {
+			alert('Budget must be a number or range (e.g., 5000 or 5000-10000)');
+			return;
+		}
+		
+		if (location && location.trim().length < 2) {
+			alert('Location must be valid');
+			return;
+		}
+		
 		if (!termsAccepted) {
 			alert('Please accept terms and conditions');
 			return;

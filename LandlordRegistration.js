@@ -3,6 +3,7 @@ import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Activi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerWithEmail, createUserProfile } from './config/firebase';
 import { pickImage, convertToBase64 } from './utils/imagePicker';
+import { validateEmail, validateMobile, validatePassword, validateNIC } from './utils/validations';
 import base64 from 'react-native-base64';
 
 const LandlordRegistration = ({ navigation }) => {
@@ -238,7 +239,11 @@ const LandlordRegistration = ({ navigation }) => {
 								<Text style={styles.checkboxText}> I accept the Terms & Conditions *</Text>
 							</TouchableOpacity>
 							{/* Register Button */}
-							<TouchableOpacity style={styles.button} onPress={handleRegister}>
+							<TouchableOpacity 
+								style={[styles.button, !proofUploaded && styles.buttonDisabled]} 
+								onPress={handleRegister}
+								disabled={!proofUploaded}
+							>
 								<Text style={styles.buttonText}>Register as Landlord</Text>
 							</TouchableOpacity>
 						</View>
@@ -296,7 +301,21 @@ const styles = StyleSheet.create({
 		paddingVertical: 13,
 		alignItems: 'center',
 	},
+	uploadButtonLoading: {
+		backgroundColor: "#FFF8E1",
+		borderColor: "#FFA500",
+	},
+	uploadButtonSuccess: {
+		backgroundColor: "#E8F5E9",
+		borderColor: "#4CAF50",
+	},
+	uploadingContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
 	uploadText: { fontSize: 13, color: "#36454F" },
+	uploadTextSuccess: { color: "#4CAF50", fontWeight: "bold" },
 	checkbox: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 26, marginBottom: 20 },
 	checkboxChecked: { fontSize: 18, color: '#FFA500' },
 	checkboxUnchecked: { fontSize: 18, color: '#D3D3D3' },
@@ -308,6 +327,10 @@ const styles = StyleSheet.create({
 		paddingVertical: 12,
 		marginHorizontal: 26,
 		marginBottom: 10,
+	},
+	buttonDisabled: {
+		backgroundColor: "#CCCCCC",
+		opacity: 0.6,
 	},
 	buttonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "bold" },
 	view2: { paddingTop: 15, paddingBottom: 16 },
