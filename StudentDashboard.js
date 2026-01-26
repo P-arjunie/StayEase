@@ -74,7 +74,7 @@ const StudentDashboard = ({ navigation }) => {
 					</View>
 				</View>
 
-				<TouchableOpacity style={styles.button} onPress={() => alert('Browse Properties')}>
+				<TouchableOpacity style={styles.button} onPress={() => navigation.navigate('BrowseProperties')}>
 					<Text style={styles.text5}>
 						{"🔍 Browse Properties"}
 					</Text>
