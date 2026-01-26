@@ -1,7 +1,23 @@
-import React from "react";
-import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet, } from "react-native";
+import React, { useState } from "react";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { loginWithEmail } from './config/firebase';
 
 const Login = ({ navigation }) => {
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
+
+	const handleSignIn = async () => {
+		try {
+			const user = await loginWithEmail(email, password);
+			alert('Signed in: ' + (user.email || user.uid));
+			navigation.navigate('RoleSelection');
+		} catch (err) {
+			console.error(err);
+			alert('Sign-in failed: ' + (err.message || err));
+		}
+	};
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<ScrollView  style={styles.scrollView}>
@@ -32,9 +48,14 @@ const Login = ({ navigation }) => {
 									</Text>
 								</View>
 								<View style={styles.view5}>
-									<Text style={styles.text6}>
-										{"your.email@example.com"}
-									</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="your.email@example.com"
+										value={email}
+										onChangeText={setEmail}
+										keyboardType="email-address"
+										autoCapitalize="none"
+									/>
 								</View>
 							</View>
 							<View style={styles.column5}>
@@ -56,9 +77,13 @@ const Login = ({ navigation }) => {
 									</Text>
 								</View>
 								<View style={styles.view5}>
-									<Text style={styles.text6}>
-										{"Enter your password"}
-									</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter your password"
+										value={password}
+										onChangeText={setPassword}
+										secureTextEntry
+									/>
 								</View>
 							</View>
 							<View style={styles.view6}>
@@ -68,7 +93,7 @@ const Login = ({ navigation }) => {
 									</Text>
 								</View>
 							</View>
-							<TouchableOpacity style={styles.button} onPress={()=>alert('Pressed!')}>
+							<TouchableOpacity style={styles.button} onPress={handleSignIn}>
 								<Text style={styles.text9}>
 									{"Sign In"}
 								</Text>

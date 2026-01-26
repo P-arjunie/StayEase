@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
-import * as ImagePicker from 'expo-image-picker';
+import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerWithEmail, createUserProfile } from './config/firebase';
+import { pickImage, convertToBase64 } from './utils/imagePicker';
+import base64 from 'react-native-base64';
 
 const LandlordRegistration = ({ navigation }) => {
 	const [fullName, setFullName] = useState('');
@@ -13,17 +15,56 @@ const LandlordRegistration = ({ navigation }) => {
 	const [address, setAddress] = useState('');
 	const [propertyLocation, setPropertyLocation] = useState('');
 	const [proofUri, setProofUri] = useState(null);
+	const [proofUploaded, setProofUploaded] = useState(false);
+	const [uploading, setUploading] = useState(false);
 	const [termsAccepted, setTermsAccepted] = useState(false);
 
-	const pickImage = async () => {
-		let result = await ImagePicker.launchImageLibraryAsync({
-			mediaTypes: ImagePicker.MediaTypeOptions.Images,
-			allowsEditing: true,
-			aspect: [4, 3],
-			quality: 1,
-		});
-		if (!result.canceled) {
-			setProofUri(result.assets[0].uri);
+	const pickProof = async () => {
+		try {
+			console.log('Pick proof called');
+			setUploading(true);
+			const image = await pickImage();
+			console.log('Image picked:', image);
+			if (image) {
+				setProofUri(image.uri);
+				// Auto-upload the image immediately
+				const uploadedUrl = await uploadImageToImgBB(image.uri);
+				setProofUploaded(true);
+				setTimeout(() => setUploading(false), 500); // Small delay for animation
+				alert('Proof uploaded successfully!');
+			} else {
+				setUploading(false);
+			}
+		} catch (err) {
+			setUploading(false);
+			console.error('Error picking proof:', err);
+			alert('Error: ' + (err.message || err));
+		}
+	};
+
+	const uploadImageToImgBB = async (imageUri) => {
+		try {
+			const base64String = await convertToBase64(imageUri);
+			const apiKey = process.env.EXPO_PUBLIC_IMG_BB_API_KEY || 'ec57b3b05e75c3c3108da45bf5ba9052';
+			
+			// Upload to ImgBB
+			const formData = new FormData();
+			formData.append('image', base64String);
+			
+			const uploadResponse = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+				method: 'POST',
+				body: formData,
+			});
+			
+			const uploadData = await uploadResponse.json();
+			
+			if (uploadData.success) {
+				return uploadData.data.url;
+			} else {
+				throw new Error('ImgBB upload failed: ' + uploadData.error.message);
+			}
+		} catch (err) {
+			throw new Error('Image upload error: ' + (err.message || err));
 		}
 	};
 
@@ -36,7 +77,7 @@ const LandlordRegistration = ({ navigation }) => {
 			alert('Passwords do not match');
 			return;
 		}
-		if (!proofUri) {
+		if (!proofUploaded) {
 			alert('Please upload property ownership proof');
 			return;
 		}
@@ -55,15 +96,15 @@ const LandlordRegistration = ({ navigation }) => {
 				nic,
 				address,
 				propertyLocation,
-				proofUri,
+				proofUri, // Save the ImgBB URL instead of local URI
 				createdAt: new Date().toISOString(),
 			};
 			await createUserProfile(user.uid, profile);
 			alert('Landlord registration successful');
 			navigation.navigate('Login');
 		} catch (err) {
-			console.error(err);
-			alert('Registration failed: ' + (err.message || err));
+			console.error('Landlord registration error', err.code, err.message, err);
+			alert('Registration failed: ' + (err.code ? err.code + ' - ' : '') + (err.message || err));
 		}
 	};
 
@@ -164,10 +205,29 @@ const LandlordRegistration = ({ navigation }) => {
 							{/* Proof Upload */}
 							<View style={styles.field}>
 								<Text style={styles.label}>Property Ownership Proof *</Text>
-								<TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-									<Text style={styles.uploadText}>
-										{proofUri ? 'Proof Uploaded' : 'Upload Proof Document'}
-									</Text>
+								<TouchableOpacity 
+									style={[
+										styles.uploadButton, 
+										uploading && styles.uploadButtonLoading,
+										proofUploaded && styles.uploadButtonSuccess
+									]} 
+									onPress={pickProof}
+									disabled={uploading}
+								>
+									{uploading ? (
+										<View style={styles.uploadingContainer}>
+											<ActivityIndicator size="small" color="#FFA500" />
+											<Text style={styles.uploadText}>  Uploading...</Text>
+										</View>
+									) : proofUploaded ? (
+										<Text style={[styles.uploadText, styles.uploadTextSuccess]}>
+											✓ Proof Uploaded Successfully
+										</Text>
+									) : (
+										<Text style={styles.uploadText}>
+											📁 Upload Proof Document
+										</Text>
+									)}
 								</TouchableOpacity>
 							</View>
 							{/* Terms */}

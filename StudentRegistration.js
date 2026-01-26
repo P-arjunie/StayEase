@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
-import { Picker } from '@react-native-picker/picker';
+import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerWithEmail, createUserProfile } from './config/firebase';
+import SelectPicker from './components/SelectPicker';
 
 const StudentRegistration = ({ navigation }) => {
 	const [fullName, setFullName] = useState('');
@@ -50,8 +51,8 @@ const StudentRegistration = ({ navigation }) => {
 			alert('Student registration successful');
 			navigation.navigate('Login');
 		} catch (err) {
-			console.error(err);
-			alert('Registration failed: ' + (err.message || err));
+			console.error('Student registration error', err.code, err.message, err);
+			alert('Registration failed: ' + (err.code ? err.code + ' - ' : '') + (err.message || err));
 		}
 	};
 
@@ -172,17 +173,17 @@ const StudentRegistration = ({ navigation }) => {
 							{/* Accommodation Type */}
 							<View style={styles.field}>
 								<Text style={styles.label}>Accommodation Type *</Text>
-								<View style={styles.pickerContainer}>
-									<Picker
-										selectedValue={accommodation}
-										onValueChange={setAccommodation}
-										style={styles.picker}
-									>
-										<Picker.Item label="Room" value="room" />
-										<Picker.Item label="Boarding" value="boarding" />
-										<Picker.Item label="Apartment" value="apartment" />
-									</Picker>
-								</View>
+								<SelectPicker
+									selectedValue={accommodation}
+									onValueChange={setAccommodation}
+									items={[
+										{ label: 'Room', value: 'room' },
+										{ label: 'Boarding', value: 'boarding' },
+										{ label: 'Apartment', value: 'apartment' },
+									]}
+									style={styles.picker}
+									containerStyle={styles.pickerContainer}
+								/>
 							</View>
 							{/* Terms */}
 							<TouchableOpacity style={styles.checkbox} onPress={() => setTermsAccepted(!termsAccepted)}>
@@ -247,8 +248,11 @@ const styles = StyleSheet.create({
 		borderColor: "#D3D3D3",
 		borderRadius: 8,
 		borderWidth: 1,
+		height: 50,
+		justifyContent: 'center',
+		overflow: 'hidden',
 	},
-	picker: { height: 50, color: "#36454F" },
+	picker: { height: 50, width: '100%', color: "#36454F" },
 	checkbox: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 26, marginBottom: 20 },
 	checkboxChecked: { fontSize: 18, color: '#FFA500' },
 	checkboxUnchecked: { fontSize: 18, color: '#D3D3D3' },
