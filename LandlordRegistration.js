@@ -74,14 +74,52 @@ const LandlordRegistration = ({ navigation }) => {
 			alert('Please fill all required fields');
 			return;
 		}
+		
+		if (fullName.trim().length < 3) {
+			alert('Full name must be at least 3 characters');
+			return;
+		}
+		
+		if (!validateEmail(email)) {
+			alert('Please enter a valid email address');
+			return;
+		}
+		
+		if (!validateMobile(mobile)) {
+			alert('Please enter a valid mobile number (e.g., +94XXXXXXXXX or 0XXXXXXXXX)');
+			return;
+		}
+		
+		if (!validatePassword(password)) {
+			alert('Password must be at least 8 characters with uppercase, lowercase, and a number');
+			return;
+		}
+		
 		if (password !== confirmPassword) {
 			alert('Passwords do not match');
 			return;
 		}
+		
+		if (!validateNIC(nic)) {
+			alert('Please enter a valid NIC (9 digits + V/X or 12 digits)');
+			return;
+		}
+		
+		if (address.trim().length < 5) {
+			alert('Address must be at least 5 characters');
+			return;
+		}
+		
+		if (propertyLocation.trim().length < 2) {
+			alert('Property location must be valid');
+			return;
+		}
+		
 		if (!proofUploaded) {
 			alert('Please upload property ownership proof');
 			return;
 		}
+		
 		if (!termsAccepted) {
 			alert('Please accept terms and conditions');
 			return;

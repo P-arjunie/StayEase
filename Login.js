@@ -28,18 +28,6 @@ const Login = ({ navigation }) => {
 						</Text>
 					</View>
 					<View style={styles.column2}>
-						<View style={styles.row}>
-							<View style={styles.view3}>
-								<Text style={styles.text3}>
-									{"Student"}
-								</Text>
-							</View>
-							<View style={styles.view3}>
-								<Text style={styles.text4}>
-									{"Landlord"}
-								</Text>
-							</View>
-						</View>
 						<View style={styles.column3}>
 							<View style={styles.column4}>
 								<View style={styles.view4}>
@@ -56,18 +44,6 @@ const Login = ({ navigation }) => {
 										keyboardType="email-address"
 										autoCapitalize="none"
 									/>
-								</View>
-							</View>
-							<View style={styles.column5}>
-								<View style={styles.view4}>
-									<Text style={styles.text5}>
-										{"Phone Number"}
-									</Text>
-								</View>
-								<View style={styles.view5}>
-									<Text style={styles.text7}>
-										{"+94 XX XXX XXXX"}
-									</Text>
 								</View>
 							</View>
 							<View style={styles.column4}>
@@ -98,12 +74,6 @@ const Login = ({ navigation }) => {
 									{"Sign In"}
 								</Text>
 							</TouchableOpacity>
-							<TouchableOpacity style={styles.button2} onPress={()=>alert('Pressed!')}>
-								<Text style={styles.text10}>
-									{"Verify via OTP"}
-								</Text>
-							</TouchableOpacity>
-						</View>
 						<View style={styles.row2}>
 							<Text style={styles.text11}>
 								{"Don't have an account? "}
@@ -132,14 +102,6 @@ const styles = StyleSheet.create({
 		borderRadius: 8,
 		paddingVertical: 12,
 		marginBottom: 9,
-		marginHorizontal: 26,
-	},
-	button2: {
-		alignItems: "center",
-		borderColor: "#FFA500",
-		borderRadius: 8,
-		borderWidth: 2,
-		paddingVertical: 14,
 		marginHorizontal: 26,
 	},
 	column: {
