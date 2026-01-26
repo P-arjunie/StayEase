@@ -7,6 +7,8 @@ import Login from './Login';
 import RoleSelection from './RoleSelection';
 import StudentRegistration from './StudentRegistration';
 import LandlordRegistration from './LandlordRegistration';
+import StudentDashboard from './StudentDashboard';
+import LandlordDashboard from './LandlordDashboard';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -20,6 +22,8 @@ export default function App() {
 					<Stack.Screen name="RoleSelection" component={RoleSelection} options={{ title: 'Sign Up' }} />
 					<Stack.Screen name="StudentRegistration" component={StudentRegistration} options={{ title: 'Student Registration' }} />
 					<Stack.Screen name="LandlordRegistration" component={LandlordRegistration} options={{ title: 'Landlord Registration' }} />
+					<Stack.Screen name="StudentDashboard" component={StudentDashboard} options={{ title: 'Dashboard' }} />
+					<Stack.Screen name="LandlordDashboard" component={LandlordDashboard} options={{ title: 'Dashboard' }} />
 				</Stack.Navigator>
 			</NavigationContainer>
 		</SafeAreaProvider>

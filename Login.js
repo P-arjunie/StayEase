@@ -1,90 +1,104 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { loginWithEmail } from './config/firebase';
+import { loginWithEmail, getUserProfile } from './config/firebase';
 
 const Login = ({ navigation }) => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [loading, setLoading] = useState(false);
 
 	const handleSignIn = async () => {
 		try {
+			setLoading(true);
 			const user = await loginWithEmail(email, password);
-			alert('Signed in: ' + (user.email || user.uid));
-			navigation.navigate('RoleSelection');
+			
+			// Get user profile to determine role
+			const profile = await getUserProfile(user.uid);
+			
+			if (profile && profile.role) {
+				if (profile.role === 'landlord') {
+					navigation.navigate('LandlordDashboard');
+				} else if (profile.role === 'student') {
+					navigation.navigate('StudentDashboard');
+				}
+			} else {
+				// Fallback to role selection if profile not found
+				navigation.navigate('RoleSelection');
+			}
 		} catch (err) {
 			console.error(err);
 			alert('Sign-in failed: ' + (err.message || err));
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView  style={styles.scrollView}>
-				<View style={styles.column}>
-					<View style={styles.view2}>
-						<Text style={styles.text2}>
-							{"StayEase"}
+			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+				<View style={styles.header}>
+					<Text style={styles.logo}>🏠 StayEase</Text>
+					<Text style={styles.subtitle}>Find Your Perfect Stay</Text>
+				</View>
+
+				<View style={styles.formContainer}>
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>📧 Email Address</Text>
+						<TextInput
+							style={styles.input}
+							placeholder="your.email@example.com"
+							value={email}
+							onChangeText={setEmail}
+							keyboardType="email-address"
+							autoCapitalize="none"
+							placeholderTextColor="#BDBDBD"
+						/>
+					</View>
+
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>🔒 Password</Text>
+						<TextInput
+							style={styles.input}
+							placeholder="Enter your password"
+							value={password}
+							onChangeText={setPassword}
+							secureTextEntry
+							placeholderTextColor="#BDBDBD"
+						/>
+					</View>
+
+					<TouchableOpacity>
+						<Text style={styles.forgotPassword}>Forgot Password?</Text>
+					</TouchableOpacity>
+
+					<TouchableOpacity 
+						style={[styles.button, loading && styles.buttonDisabled]} 
+						onPress={handleSignIn} 
+						disabled={loading}
+						activeOpacity={0.8}
+					>
+						<Text style={styles.buttonText}>
+							{loading ? "Signing In..." : "Sign In"}
 						</Text>
+					</TouchableOpacity>
+
+					<View style={styles.divider}>
+						<View style={styles.dividerLine}></View>
+						<Text style={styles.dividerText}>or</Text>
+						<View style={styles.dividerLine}></View>
 					</View>
-					<View style={styles.column2}>
-						<View style={styles.column3}>
-							<View style={styles.column4}>
-								<View style={styles.view4}>
-									<Text style={styles.text5}>
-										{"Email Address"}
-									</Text>
-								</View>
-								<View style={styles.view5}>
-									<TextInput
-										style={styles.input}
-										placeholder="your.email@example.com"
-										value={email}
-										onChangeText={setEmail}
-										keyboardType="email-address"
-										autoCapitalize="none"
-									/>
-								</View>
-							</View>
-							<View style={styles.column4}>
-								<View style={styles.view4}>
-									<Text style={styles.text5}>
-										{"Password"}
-									</Text>
-								</View>
-								<View style={styles.view5}>
-									<TextInput
-										style={styles.input}
-										placeholder="Enter your password"
-										value={password}
-										onChangeText={setPassword}
-										secureTextEntry
-									/>
-								</View>
-							</View>
-							<View style={styles.view6}>
-								<View style={styles.view7}>
-									<Text style={styles.text8}>
-										{"Forgot Password?"}
-									</Text>
-								</View>
-							</View>
-							<TouchableOpacity style={styles.button} onPress={handleSignIn}>
-								<Text style={styles.text9}>
-									{"Sign In"}
-								</Text>
-							</TouchableOpacity>
-						<View style={styles.row2}>
-							<Text style={styles.text11}>
-								{"Don't have an account? "}
-							</Text>
-							<TouchableOpacity style={styles.view8} onPress={() => navigation.navigate('RoleSelection')}>
-								<Text style={styles.text8}>
-									{"Sign Up"}
-								</Text>
-							</TouchableOpacity>
-						</View>
+
+					<View style={styles.signupContainer}>
+						<Text style={styles.signupText}>Don't have an account? </Text>
+						<TouchableOpacity onPress={() => navigation.navigate('RoleSelection')}>
+							<Text style={styles.signupLink}>Sign Up</Text>
+						</TouchableOpacity>
 					</View>
+				</View>
+
+				<View style={styles.footer}>
+					<Text style={styles.footerText}>Secure login powered by Firebase</Text>
 				</View>
 			</ScrollView>
 		</SafeAreaView>
@@ -94,143 +108,135 @@ const Login = ({ navigation }) => {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#FFFFFF",
-	},
-	button: {
-		alignItems: "center",
-		backgroundColor: "#FFA500",
-		borderRadius: 8,
-		paddingVertical: 12,
-		marginBottom: 9,
-		marginHorizontal: 26,
-	},
-	column: {
-		backgroundColor: "#F5F5F5",
-		padding: 20,
-	},
-	column2: {
-		alignItems: "center",
-		paddingVertical: 39,
-	},
-	column3: {
-		alignSelf: "stretch",
-		backgroundColor: "#FFFFFF",
-		borderColor: "#D3D3D3",
-		borderRadius: 12,
-		borderWidth: 1,
-		paddingVertical: 26,
-		marginBottom: 20,
-	},
-	column4: {
-		marginBottom: 19,
-		marginHorizontal: 26,
-	},
-	column5: {
-		marginBottom: 18,
-		marginHorizontal: 26,
-	},
-	row: {
-		alignSelf: "stretch",
-		flexDirection: "row",
-		alignItems: "center",
-		marginBottom: 30,
-	},
-	row2: {
-		flexDirection: "row",
-		alignItems: "center",
+		backgroundColor: "#F8F9FA",
 	},
 	scrollView: {
 		flex: 1,
-		backgroundColor: "#F5F5F5",
-		borderRadius: 20,
-		shadowColor: "#0000001A",
-		shadowOpacity: 0.1,
-		shadowOffset: {
-		    width: 0,
-		    height: 10
-		},
-		shadowRadius: 30,
-		elevation: 30,
+		paddingHorizontal: 20,
 	},
-	text2: {
-		color: "#FFA500",
-		fontSize: 24,
-		fontWeight: "bold",
+	header: {
+		paddingVertical: 60,
+		paddingHorizontal: 20,
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
-	text3: {
-		color: "#FFA500",
-		fontSize: 16,
-		fontWeight: "bold",
-	},
-	text4: {
-		color: "#36454F",
-		fontSize: 16,
-		fontWeight: "bold",
-	},
-	text5: {
-		color: "#36454F",
-		fontSize: 14,
-		fontWeight: "bold",
-	},
-	text6: {
-		color: "#D3D3D3",
-		fontSize: 13,
-	},
-	text7: {
-		color: "#D3D3D3",
-		fontSize: 14,
-	},
-	text8: {
-		color: "#FFA500",
-		fontSize: 13,
-	},
-	text9: {
-		color: "#FFFFFF",
-		fontSize: 14,
-		fontWeight: "bold",
-	},
-	text10: {
-		color: "#FFA500",
-		fontSize: 13,
-		fontWeight: "bold",
-	},
-	text11: {
-		color: "#36454F",
-		fontSize: 14,
-		marginRight: 6,
-	},
-	view2: {
-		paddingTop: 15,
-		paddingBottom: 16,
-	},
-	view3: {
-		flex: 1,
-		alignItems: "center",
-		paddingVertical: 13,
-	},
-	view4: {
-		paddingBottom: 1,
+	logo: {
+		fontSize: 36,
+		fontWeight: 'bold',
+		color: '#FFA500',
 		marginBottom: 8,
+		letterSpacing: 1,
 	},
-	view5: {
-		backgroundColor: "#F5F5F5",
-		borderColor: "#D3D3D3",
-		borderRadius: 8,
-		borderWidth: 1,
-		paddingTop: 13,
+	subtitle: {
+		fontSize: 16,
+		color: '#36454F',
+		fontWeight: '500',
+		letterSpacing: 0.5,
+	},
+	formContainer: {
+		backgroundColor: '#FFFFFF',
+		borderRadius: 16,
+		padding: 24,
+		marginBottom: 30,
+		shadowColor: '#000',
+		shadowOpacity: 0.08,
+		shadowOffset: { width: 0, height: 4 },
+		shadowRadius: 12,
+		elevation: 8,
+	},
+	inputGroup: {
+		marginBottom: 20,
+	},
+	label: {
+		fontSize: 14,
+		fontWeight: '600',
+		color: '#36454F',
+		marginBottom: 10,
+		letterSpacing: 0.3,
+	},
+	input: {
+		backgroundColor: '#F5F7FA',
+		borderColor: '#E0E0E0',
+		borderRadius: 10,
+		borderWidth: 1.5,
+		paddingTop: 14,
 		paddingBottom: 14,
 		paddingHorizontal: 16,
+		fontSize: 14,
+		color: '#36454F',
+		fontWeight: '500',
 	},
-	view6: {
-		alignItems: "flex-end",
-		marginBottom: 9,
+	forgotPassword: {
+		fontSize: 13,
+		color: '#FFA500',
+		fontWeight: '600',
+		marginBottom: 20,
+		textAlign: 'right',
+		textDecorationLine: 'underline',
 	},
-	view7: {
-		paddingBottom: 1,
-		marginRight: 29,
+	button: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		backgroundColor: '#FFA500',
+		borderRadius: 12,
+		paddingVertical: 15,
+		marginBottom: 20,
+		shadowColor: '#FFA500',
+		shadowOpacity: 0.3,
+		shadowOffset: { width: 0, height: 4 },
+		shadowRadius: 8,
+		elevation: 6,
 	},
-	view8: {
-		paddingBottom: 1,
+	buttonDisabled: {
+		backgroundColor: '#CCCCCC',
+		opacity: 0.7,
+	},
+	buttonText: {
+		color: '#FFFFFF',
+		fontSize: 15,
+		fontWeight: '700',
+		letterSpacing: 0.5,
+	},
+	divider: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 24,
+	},
+	dividerLine: {
+		flex: 1,
+		height: 1,
+		backgroundColor: '#E0E0E0',
+	},
+	dividerText: {
+		marginHorizontal: 12,
+		color: '#999999',
+		fontSize: 12,
+		fontWeight: '500',
+	},
+	signupContainer: {
+		flexDirection: 'row',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	signupText: {
+		fontSize: 14,
+		color: '#36454F',
+	},
+	signupLink: {
+		fontSize: 14,
+		color: '#FFA500',
+		fontWeight: '700',
+		textDecorationLine: 'underline',
+	},
+	footer: {
+		alignItems: 'center',
+		paddingVertical: 20,
+		paddingBottom: 40,
+	},
+	footerText: {
+		fontSize: 12,
+		color: '#999999',
+		fontStyle: 'italic',
 	},
 });
 

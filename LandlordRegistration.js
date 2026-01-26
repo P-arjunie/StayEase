@@ -140,7 +140,7 @@ const LandlordRegistration = ({ navigation }) => {
 			};
 			await createUserProfile(user.uid, profile);
 			alert('Landlord registration successful');
-			navigation.navigate('Login');
+			navigation.navigate('LandlordDashboard');
 		} catch (err) {
 			console.error('Landlord registration error', err.code, err.message, err);
 			alert('Registration failed: ' + (err.code ? err.code + ' - ' : '') + (err.message || err));
