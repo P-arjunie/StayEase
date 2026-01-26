@@ -1,0 +1,419 @@
+import React, { useState } from "react";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Image, Dimensions } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { auth } from "./config/firebase";
+
+const { width } = Dimensions.get('window');
+
+const PropertyDetail = ({ navigation, route }) => {
+	const { property } = route.params;
+	const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+	const images = property.images || [property.image];
+	const occupiedSlots = (property.totalTenants || 0) - (property.availableTenants || 0);
+
+	const handleEdit = () => {
+		navigation.navigate('EditProperty', { property, userId: auth.currentUser?.uid });
+	};
+
+	const handleBack = () => {
+		navigation.goBack();
+	};
+
+	return (
+		<SafeAreaView style={styles.container}>
+			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+				{/* Image Carousel */}
+				<View style={styles.imageCarousel}>
+					<ScrollView
+						horizontal
+						pagingEnabled
+						showsHorizontalScrollIndicator={false}
+						onMomentumScrollEnd={(e) => {
+							const index = Math.round(e.nativeEvent.contentOffset.x / width);
+							setCurrentImageIndex(index);
+						}}
+						scrollEventThrottle={16}
+					>
+						{images.map((image, index) => (
+							<Image
+								key={index}
+								source={{ uri: image }}
+								style={[styles.propertyImage, { width: width - 40 }]}
+								resizeMode="cover"
+							/>
+						))}
+					</ScrollView>
+
+					{/* Image Counter */}
+					<View style={styles.imageCounter}>
+						<Text style={styles.imageCounterText}>
+							{currentImageIndex + 1} / {images.length}
+						</Text>
+					</View>
+				</View>
+
+				{/* Property Header */}
+				<View style={styles.header}>
+					<View style={styles.headerTop}>
+						<View style={styles.titleSection}>
+							<Text style={styles.propertyName}>{property.name}</Text>
+							<Text style={styles.propertyLocation}>📍 {property.address}</Text>
+						</View>
+						<View style={[styles.statusBadge, property.status === 'active' ? styles.activeBadge : styles.inactiveBadge]}>
+							<Text style={styles.statusText}>
+								{property.status === 'active' ? '✓ Active' : '○ Inactive'}
+							</Text>
+						</View>
+					</View>
+					<Text style={styles.propertyPrice}>Rs {property.monthlyRent?.toLocaleString()}/month</Text>
+				</View>
+
+				{/* Key Details Grid */}
+				<View style={styles.detailsGrid}>
+					<View style={styles.detailCard}>
+						<Text style={styles.detailIcon}>🛏️</Text>
+						<Text style={styles.detailValue}>{property.bedrooms}</Text>
+						<Text style={styles.detailLabel}>Bedrooms</Text>
+					</View>
+					<View style={styles.detailCard}>
+						<Text style={styles.detailIcon}>🚿</Text>
+						<Text style={styles.detailValue}>{property.bathrooms}</Text>
+						<Text style={styles.detailLabel}>Bathrooms</Text>
+					</View>
+					<View style={styles.detailCard}>
+						<Text style={styles.detailIcon}>👥</Text>
+						<Text style={styles.detailValue}>{property.totalTenants}</Text>
+						<Text style={styles.detailLabel}>Total Capacity</Text>
+					</View>
+					<View style={styles.detailCard}>
+						<Text style={styles.detailIcon}>✨</Text>
+						<Text style={styles.detailValue}>{property.availableTenants}</Text>
+						<Text style={styles.detailLabel}>Available</Text>
+					</View>
+				</View>
+
+				{/* Occupancy Status */}
+				<View style={styles.occupancySection}>
+					<Text style={styles.sectionTitle}>Occupancy Status</Text>
+					<View style={styles.occupancyBar}>
+						<View
+							style={[
+								styles.occupancyFilled,
+								{
+									width: `${(occupiedSlots / (property.totalTenants || 1)) * 100}%`,
+								},
+							]}
+						/>
+					</View>
+					<Text style={styles.occupancyText}>
+						{occupiedSlots} occupied • {property.availableTenants} available
+					</Text>
+				</View>
+
+				{/* Financial Details */}
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Financial Details</Text>
+					<View style={styles.detailRow}>
+						<Text style={styles.detailRowLabel}>Monthly Rent:</Text>
+						<Text style={styles.detailRowValue}>Rs {property.monthlyRent?.toLocaleString()}</Text>
+					</View>
+					<View style={styles.detailRow}>
+						<Text style={styles.detailRowLabel}>Security Deposit:</Text>
+						<Text style={styles.detailRowValue}>Rs {property.deposit?.toLocaleString()}</Text>
+					</View>
+				</View>
+
+				{/* Description */}
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Description</Text>
+					<Text style={styles.descriptionText}>{property.description}</Text>
+				</View>
+
+				{/* Facilities */}
+				{property.facilities && property.facilities.length > 0 && (
+					<View style={styles.section}>
+						<Text style={styles.sectionTitle}>Facilities</Text>
+						<View style={styles.facilitiesList}>
+							{property.facilities.map((facility, index) => (
+								<View key={index} style={styles.facilityTag}>
+									<Text style={styles.facilityTagText}>{facility}</Text>
+								</View>
+							))}
+						</View>
+					</View>
+				)}
+
+				{/* Visit Times */}
+				{property.visitTimes && property.visitTimes.length > 0 && (
+					<View style={styles.section}>
+						<Text style={styles.sectionTitle}>Available Visit Times</Text>
+						<View style={styles.visitTimesList}>
+							{property.visitTimes.map((time, index) => (
+								<View key={index} style={styles.visitTimeTag}>
+									<Text style={styles.visitTimeText}>🕐 {time}</Text>
+								</View>
+							))}
+						</View>
+					</View>
+				)}
+
+				{/* Action Buttons */}
+				<View style={styles.actionButtons}>
+					<TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+						<Text style={styles.editButtonText}>✎ Edit Property</Text>
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.backButton} onPress={handleBack}>
+						<Text style={styles.backButtonText}>← Back</Text>
+					</TouchableOpacity>
+				</View>
+			</ScrollView>
+		</SafeAreaView>
+	);
+};
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		backgroundColor: '#F8F9FA',
+	},
+	scrollView: {
+		flex: 1,
+	},
+	imageCarousel: {
+		position: 'relative',
+		marginBottom: 20,
+	},
+	propertyImage: {
+		height: 300,
+		marginHorizontal: 20,
+		borderRadius: 12,
+		backgroundColor: '#E0E0E0',
+	},
+	imageCounter: {
+		position: 'absolute',
+		bottom: 12,
+		right: 32,
+		backgroundColor: 'rgba(0,0,0,0.6)',
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 16,
+	},
+	imageCounterText: {
+		color: '#FFFFFF',
+		fontSize: 12,
+		fontWeight: '600',
+	},
+	header: {
+		paddingHorizontal: 20,
+		marginBottom: 20,
+	},
+	headerTop: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'flex-start',
+		marginBottom: 8,
+	},
+	titleSection: {
+		flex: 1,
+	},
+	propertyName: {
+		fontSize: 22,
+		fontWeight: '700',
+		color: '#36454F',
+		marginBottom: 4,
+	},
+	propertyLocation: {
+		fontSize: 14,
+		color: '#757575',
+	},
+	statusBadge: {
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+		borderRadius: 12,
+		marginLeft: 10,
+	},
+	activeBadge: {
+		backgroundColor: '#E8F5E9',
+	},
+	inactiveBadge: {
+		backgroundColor: '#FCE4EC',
+	},
+	statusText: {
+		fontSize: 12,
+		fontWeight: '600',
+		color: '#36454F',
+	},
+	propertyPrice: {
+		fontSize: 20,
+		fontWeight: 'bold',
+		color: '#FFA500',
+	},
+	detailsGrid: {
+		paddingHorizontal: 20,
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 12,
+		marginBottom: 20,
+	},
+	detailCard: {
+		flex: 1,
+		minWidth: '22%',
+		backgroundColor: '#FFFFFF',
+		borderRadius: 12,
+		paddingVertical: 14,
+		paddingHorizontal: 10,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOpacity: 0.08,
+		shadowOffset: { width: 0, height: 2 },
+		shadowRadius: 8,
+		elevation: 3,
+	},
+	detailIcon: {
+		fontSize: 24,
+		marginBottom: 4,
+	},
+	detailValue: {
+		fontSize: 18,
+		fontWeight: 'bold',
+		color: '#FFA500',
+	},
+	detailLabel: {
+		fontSize: 10,
+		color: '#757575',
+		marginTop: 4,
+		textAlign: 'center',
+	},
+	occupancySection: {
+		paddingHorizontal: 20,
+		marginBottom: 24,
+		backgroundColor: '#FFFFFF',
+		paddingVertical: 16,
+		borderRadius: 12,
+		marginHorizontal: 20,
+		shadowColor: '#000',
+		shadowOpacity: 0.08,
+		shadowOffset: { width: 0, height: 2 },
+		shadowRadius: 8,
+		elevation: 3,
+	},
+	section: {
+		paddingHorizontal: 20,
+		marginBottom: 20,
+	},
+	sectionTitle: {
+		fontSize: 16,
+		fontWeight: 'bold',
+		color: '#36454F',
+		marginBottom: 12,
+	},
+	occupancyBar: {
+		height: 8,
+		backgroundColor: '#E0E0E0',
+		borderRadius: 4,
+		overflow: 'hidden',
+		marginBottom: 8,
+	},
+	occupancyFilled: {
+		height: '100%',
+		backgroundColor: '#FFA500',
+	},
+	occupancyText: {
+		fontSize: 12,
+		color: '#757575',
+		fontWeight: '500',
+	},
+	detailRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		paddingVertical: 10,
+		borderBottomWidth: 1,
+		borderBottomColor: '#E0E0E0',
+	},
+	detailRowLabel: {
+		fontSize: 14,
+		color: '#757575',
+		fontWeight: '500',
+	},
+	detailRowValue: {
+		fontSize: 14,
+		fontWeight: 'bold',
+		color: '#36454F',
+	},
+	descriptionText: {
+		fontSize: 14,
+		color: '#757575',
+		lineHeight: 20,
+	},
+	facilitiesList: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 8,
+	},
+	facilityTag: {
+		backgroundColor: '#FFA500',
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+		borderRadius: 16,
+	},
+	facilityTagText: {
+		color: '#FFFFFF',
+		fontSize: 12,
+		fontWeight: '600',
+	},
+	visitTimesList: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 8,
+	},
+	visitTimeTag: {
+		backgroundColor: '#F5F7FA',
+		borderColor: '#FFA500',
+		borderWidth: 1,
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		borderRadius: 8,
+	},
+	visitTimeText: {
+		color: '#FFA500',
+		fontSize: 13,
+		fontWeight: '600',
+	},
+	actionButtons: {
+		paddingHorizontal: 20,
+		paddingVertical: 20,
+		gap: 10,
+	},
+	editButton: {
+		backgroundColor: '#FFA500',
+		paddingVertical: 14,
+		borderRadius: 8,
+		alignItems: 'center',
+		shadowColor: '#FFA500',
+		shadowOpacity: 0.3,
+		shadowOffset: { width: 0, height: 4 },
+		shadowRadius: 8,
+		elevation: 6,
+	},
+	editButtonText: {
+		color: '#FFFFFF',
+		fontSize: 15,
+		fontWeight: 'bold',
+	},
+	backButton: {
+		backgroundColor: '#FFFFFF',
+		borderColor: '#FFA500',
+		borderWidth: 2,
+		paddingVertical: 12,
+		borderRadius: 8,
+		alignItems: 'center',
+	},
+	backButtonText: {
+		color: '#FFA500',
+		fontSize: 15,
+		fontWeight: 'bold',
+	},
+});
+
+export default PropertyDetail;

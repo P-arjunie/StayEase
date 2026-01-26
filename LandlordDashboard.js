@@ -136,13 +136,13 @@ const LandlordDashboard = ({ navigation }) => {
 								<View style={styles.actionButtons}>
 									<TouchableOpacity
 										style={styles.editButton}
-										onPress={() => console.log('Edit property')}
+										onPress={() => navigation.navigate('EditProperty', { property, userId: auth.currentUser?.uid })}
 									>
 										<Text style={styles.editButtonText}>Edit</Text>
 									</TouchableOpacity>
 									<TouchableOpacity
 										style={styles.viewButton}
-										onPress={() => console.log('View property')}
+										onPress={() => navigation.navigate('PropertyDetail', { property })}
 									>
 										<Text style={styles.viewButtonText}>View</Text>
 									</TouchableOpacity>
