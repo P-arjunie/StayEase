@@ -60,10 +60,17 @@ const PropertyDetail = ({ navigation, route }) => {
 							<Text style={styles.propertyName}>{property.name}</Text>
 							<Text style={styles.propertyLocation}>📍 {property.address}</Text>
 						</View>
-						<View style={[styles.statusBadge, property.status === 'active' ? styles.activeBadge : styles.inactiveBadge]}>
-							<Text style={styles.statusText}>
-								{property.status === 'active' ? '✓ Active' : '○ Inactive'}
-							</Text>
+						<View style={styles.headerBadges}>
+							<View style={[styles.statusBadge, property.status === 'active' ? styles.activeBadge : styles.inactiveBadge]}>
+								<Text style={styles.statusText}>
+									{property.status === 'active' ? '✓ Active' : '○ Inactive'}
+								</Text>
+							</View>
+							<View style={styles.availableBadge}>
+								<Text style={styles.availableBadgeText}>
+									{property.availableTenants} Available
+								</Text>
+							</View>
 						</View>
 					</View>
 					<Text style={styles.propertyPrice}>Rs {property.monthlyRent?.toLocaleString()}/month</Text>
@@ -227,11 +234,15 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: '#757575',
 	},
+	headerBadges: {
+		flexDirection: 'column',
+		gap: 8,
+		alignItems: 'flex-end',
+	},
 	statusBadge: {
 		paddingVertical: 6,
 		paddingHorizontal: 12,
 		borderRadius: 12,
-		marginLeft: 10,
 	},
 	activeBadge: {
 		backgroundColor: '#E8F5E9',
@@ -243,6 +254,19 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		fontWeight: '600',
 		color: '#36454F',
+	},
+	availableBadge: {
+		backgroundColor: '#FFA500',
+		paddingVertical: 8,
+		paddingHorizontal: 14,
+		borderRadius: 8,
+		minWidth: 110,
+		alignItems: 'center',
+	},
+	availableBadgeText: {
+		fontSize: 13,
+		fontWeight: 'bold',
+		color: '#FFFFFF',
 	},
 	propertyPrice: {
 		fontSize: 20,
