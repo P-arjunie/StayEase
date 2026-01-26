@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createProperty } from "./config/firebase";
+import { handleError } from "./utils/errorHandler";
 
 const AddProperty = ({ navigation, route }) => {
 	const userId = route?.params?.userId;
@@ -38,7 +39,7 @@ const AddProperty = ({ navigation, route }) => {
 
 	const handlePublish = async () => {
 		if (!propertyName || !address || !monthlyRent || !deposit || !bedrooms || !bathrooms || !description) {
-			Alert.alert('Error', 'Please fill all required fields');
+			Alert.alert('Missing Fields', 'Please fill all required fields');
 			return;
 		}
 
@@ -61,8 +62,8 @@ const AddProperty = ({ navigation, route }) => {
 			Alert.alert('Success', 'Property published successfully!');
 			navigation.goBack();
 		} catch (err) {
-			console.error('Error publishing property:', err);
-			Alert.alert('Error', 'Failed to publish property: ' + (err.message || err));
+			const errorMsg = handleError(err, 'Add Property');
+			Alert.alert('Publication Failed', errorMsg);
 		} finally {
 			setLoading(false);
 		}

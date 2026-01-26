@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerWithEmail, createUserProfile } from './config/firebase';
 import { pickImage, convertToBase64 } from './utils/imagePicker';
 import { validateEmail, validateMobile, validatePassword, validateNIC } from './utils/validations';
+import { handleError } from './utils/errorHandler';
 import base64 from 'react-native-base64';
 
 const LandlordRegistration = ({ navigation }) => {
@@ -32,14 +33,14 @@ const LandlordRegistration = ({ navigation }) => {
 				const uploadedUrl = await uploadImageToImgBB(image.uri);
 				setProofUploaded(true);
 				setTimeout(() => setUploading(false), 500); // Small delay for animation
-				alert('Proof uploaded successfully!');
+				Alert.alert('Success', 'Proof uploaded successfully!');
 			} else {
 				setUploading(false);
 			}
 		} catch (err) {
 			setUploading(false);
-			console.error('Error picking proof:', err);
-			alert('Error: ' + (err.message || err));
+			const errorMsg = handleError(err, 'Image Upload');
+			Alert.alert('Upload Failed', errorMsg);
 		}
 	};
 
@@ -62,7 +63,7 @@ const LandlordRegistration = ({ navigation }) => {
 			if (uploadData.success) {
 				return uploadData.data.url;
 			} else {
-				throw new Error('ImgBB upload failed: ' + uploadData.error.message);
+				throw new Error(uploadData.error.message || 'Image upload failed');
 			}
 		} catch (err) {
 			throw new Error('Image upload error: ' + (err.message || err));
@@ -71,61 +72,62 @@ const LandlordRegistration = ({ navigation }) => {
 
 	const handleRegister = async () => {
 		if (!fullName || !email || !mobile || !password || !confirmPassword || !nic || !address || !propertyLocation) {
-			alert('Please fill all required fields');
+			Alert.alert('Missing Fields', 'Please fill all required fields');
 			return;
 		}
 		
 		if (fullName.trim().length < 3) {
-			alert('Full name must be at least 3 characters');
+			Alert.alert('Invalid Name', 'Full name must be at least 3 characters');
 			return;
 		}
 		
 		if (!validateEmail(email)) {
-			alert('Please enter a valid email address');
+			Alert.alert('Invalid Email', 'Please enter a valid email address');
 			return;
 		}
 		
 		if (!validateMobile(mobile)) {
-			alert('Please enter a valid mobile number (e.g., +94XXXXXXXXX or 0XXXXXXXXX)');
+			Alert.alert('Invalid Mobile', 'Please enter a valid mobile number (e.g., +94XXXXXXXXX or 0XXXXXXXXX)');
 			return;
 		}
 		
 		if (!validatePassword(password)) {
-			alert('Password must be at least 8 characters with uppercase, lowercase, and a number');
+			Alert.alert('Weak Password', 'Password must be at least 8 characters with uppercase, lowercase, and a number');
 			return;
 		}
 		
 		if (password !== confirmPassword) {
-			alert('Passwords do not match');
+			Alert.alert('Password Mismatch', 'Passwords do not match');
 			return;
 		}
 		
 		if (!validateNIC(nic)) {
-			alert('Please enter a valid NIC (9 digits + V/X or 12 digits)');
+			Alert.alert('Invalid NIC', 'Please enter a valid NIC (9 digits + V/X or 12 digits)');
 			return;
 		}
 		
 		if (address.trim().length < 5) {
-			alert('Address must be at least 5 characters');
+			Alert.alert('Invalid Address', 'Address must be at least 5 characters');
 			return;
 		}
 		
 		if (propertyLocation.trim().length < 2) {
-			alert('Property location must be valid');
+			Alert.alert('Invalid Location', 'Property location must be valid');
 			return;
 		}
 		
 		if (!proofUploaded) {
-			alert('Please upload property ownership proof');
+			Alert.alert('Proof Required', 'Please upload property ownership proof');
 			return;
 		}
 		
 		if (!termsAccepted) {
-			alert('Please accept terms and conditions');
+			Alert.alert('Terms Required', 'Please accept terms and conditions');
 			return;
 		}
 
 		try {
+			setUploading(true);
 			const user = await registerWithEmail(email, password);
 			const profile = {
 				role: 'landlord',
@@ -139,11 +141,13 @@ const LandlordRegistration = ({ navigation }) => {
 				createdAt: new Date().toISOString(),
 			};
 			await createUserProfile(user.uid, profile);
-			alert('Landlord registration successful');
+			Alert.alert('Success', 'Landlord registration successful');
 			navigation.navigate('LandlordDashboard');
 		} catch (err) {
-			console.error('Landlord registration error', err.code, err.message, err);
-			alert('Registration failed: ' + (err.code ? err.code + ' - ' : '') + (err.message || err));
+			const errorMsg = handleError(err, 'Landlord Registration');
+			Alert.alert('Registration Failed', errorMsg);
+		} finally {
+			setUploading(false);
 		}
 	};
 
@@ -278,11 +282,11 @@ const LandlordRegistration = ({ navigation }) => {
 							</TouchableOpacity>
 							{/* Register Button */}
 							<TouchableOpacity 
-								style={[styles.button, !proofUploaded && styles.buttonDisabled]} 
+								style={[styles.button, (!proofUploaded || uploading) && styles.buttonDisabled]} 
 								onPress={handleRegister}
-								disabled={!proofUploaded}
+								disabled={!proofUploaded || uploading}
 							>
-								<Text style={styles.buttonText}>Register as Landlord</Text>
+								<Text style={styles.buttonText}>{uploading ? 'Registering...' : 'Register as Landlord'}</Text>
 							</TouchableOpacity>
 						</View>
 						<TouchableOpacity onPress={() => navigation.goBack()}>

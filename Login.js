@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginWithEmail, getUserProfile } from './config/firebase';
+import { handleError } from './utils/errorHandler';
 
 const Login = ({ navigation }) => {
 	const [email, setEmail] = useState('');
@@ -27,8 +28,8 @@ const Login = ({ navigation }) => {
 				navigation.navigate('RoleSelection');
 			}
 		} catch (err) {
-			console.error(err);
-			alert('Sign-in failed: ' + (err.message || err));
+			const errorMsg = handleError(err, 'Login');
+			Alert.alert('Sign In Failed', errorMsg);
 		} finally {
 			setLoading(false);
 		}

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerWithEmail, createUserProfile } from './config/firebase';
 import SelectPicker from './components/SelectPicker';
 import { validateEmail, validateMobile, validatePassword, validateBudgetRange, validateStudentID } from './utils/validations';
+import { handleError } from './utils/errorHandler';
 
 const StudentRegistration = ({ navigation }) => {
 	const [fullName, setFullName] = useState('');
@@ -18,64 +19,66 @@ const StudentRegistration = ({ navigation }) => {
 	const [budget, setBudget] = useState('');
 	const [accommodation, setAccommodation] = useState('room');
 	const [termsAccepted, setTermsAccepted] = useState(false);
+	const [loading, setLoading] = useState(false);
 
 	const handleRegister = async () => {
 		if (!fullName || !email || !mobile || !password || !confirmPassword) {
-			alert('Please fill all required fields');
+			Alert.alert('Missing Fields', 'Please fill all required fields');
 			return;
 		}
 		
 		if (fullName.trim().length < 3) {
-			alert('Full name must be at least 3 characters');
+			Alert.alert('Invalid Name', 'Full name must be at least 3 characters');
 			return;
 		}
 		
 		if (!validateEmail(email)) {
-			alert('Please enter a valid email address');
+			Alert.alert('Invalid Email', 'Please enter a valid email address');
 			return;
 		}
 		
 		if (!validateMobile(mobile)) {
-			alert('Please enter a valid mobile number (e.g., +94XXXXXXXXX or 0XXXXXXXXX)');
+			Alert.alert('Invalid Mobile', 'Please enter a valid mobile number (e.g., +94XXXXXXXXX or 0XXXXXXXXX)');
 			return;
 		}
 		
 		if (!validatePassword(password)) {
-			alert('Password must be at least 8 characters with uppercase, lowercase, and a number');
+			Alert.alert('Weak Password', 'Password must be at least 8 characters with uppercase, lowercase, and a number');
 			return;
 		}
 		
 		if (password !== confirmPassword) {
-			alert('Passwords do not match');
+			Alert.alert('Password Mismatch', 'Passwords do not match');
 			return;
 		}
 		
 		if (university && university.trim().length < 2) {
-			alert('University name must be valid');
+			Alert.alert('Invalid University', 'University name must be valid');
 			return;
 		}
 		
 		if (studentId && !validateStudentID(studentId)) {
-			alert('Student ID must contain at least 3 alphanumeric characters');
+			Alert.alert('Invalid Student ID', 'Student ID must contain at least 3 alphanumeric characters');
 			return;
 		}
 		
 		if (budget && !validateBudgetRange(budget)) {
-			alert('Budget must be a number or range (e.g., 5000 or 5000-10000)');
+			Alert.alert('Invalid Budget', 'Budget must be a number or range (e.g., 5000 or 5000-10000)');
 			return;
 		}
 		
 		if (location && location.trim().length < 2) {
-			alert('Location must be valid');
+			Alert.alert('Invalid Location', 'Location must be valid');
 			return;
 		}
 		
 		if (!termsAccepted) {
-			alert('Please accept terms and conditions');
+			Alert.alert('Terms Required', 'Please accept terms and conditions');
 			return;
 		}
 
 		try {
+			setLoading(true);
 			const user = await registerWithEmail(email, password);
 			const profile = {
 				role: 'student',
@@ -94,8 +97,10 @@ const StudentRegistration = ({ navigation }) => {
 			alert('Student registration successful');
 			navigation.navigate('Login');
 		} catch (err) {
-			console.error('Student registration error', err.code, err.message, err);
-			alert('Registration failed: ' + (err.code ? err.code + ' - ' : '') + (err.message || err));
+			const errorMsg = handleError(err, 'Student Registration');
+			Alert.alert('Registration Failed', errorMsg);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -236,8 +241,8 @@ const StudentRegistration = ({ navigation }) => {
 								<Text style={styles.checkboxText}> I accept the Terms & Conditions *</Text>
 							</TouchableOpacity>
 							{/* Register Button */}
-							<TouchableOpacity style={styles.button} onPress={handleRegister}>
-								<Text style={styles.buttonText}>Register as Student</Text>
+							<TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleRegister} disabled={loading}>
+								<Text style={styles.buttonText}>{loading ? 'Registering...' : 'Register as Student'}</Text>
 							</TouchableOpacity>
 						</View>
 						<TouchableOpacity onPress={() => navigation.goBack()}>
@@ -307,6 +312,10 @@ const styles = StyleSheet.create({
 		paddingVertical: 12,
 		marginHorizontal: 26,
 		marginBottom: 10,
+	},
+	buttonDisabled: {
+		opacity: 0.6,
+		backgroundColor: "#CCCCCC",
 	},
 	buttonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "bold" },
 	view2: { paddingTop: 15, paddingBottom: 16 },
