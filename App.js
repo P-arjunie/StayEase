@@ -21,6 +21,9 @@ import LandlordPayments from './LandlordPayments';
 import LandlordConcerns from './LandlordConcerns';
 import GuardianLogin from './GuardianLogin';
 import GuardianDashboard from './GuardianDashboard';
+import GuardianBookings from './GuardianBookings';
+import GuardianPayments from './GuardianPayments';
+import GuardianConcerns from './GuardianConcerns';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -48,6 +51,9 @@ export default function App() {
 					<Stack.Screen name="LandlordConcerns" component={LandlordConcerns} options={{ headerShown: false }} />
 					<Stack.Screen name="GuardianLogin" component={GuardianLogin} options={{ headerShown: false }} />
 					<Stack.Screen name="GuardianDashboard" component={GuardianDashboard} options={{ headerShown: false }} />
+					<Stack.Screen name="GuardianBookings" component={GuardianBookings} options={{ headerShown: false }} />
+					<Stack.Screen name="GuardianPayments" component={GuardianPayments} options={{ headerShown: false }} />
+					<Stack.Screen name="GuardianConcerns" component={GuardianConcerns} options={{ headerShown: false }} />
 				</Stack.Navigator>
 			</NavigationContainer>
 		</SafeAreaProvider>

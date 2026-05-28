@@ -173,6 +173,46 @@ const GuardianDashboard = ({ navigation }) => {
 								</Text>
 							</TouchableOpacity>
 						</View>
+						{/* Tracking Links */}
+						<View style={styles.card}>
+							<Text style={styles.cardTitle}>📊 Activity Tracking</Text>
+							
+							<TouchableOpacity 
+								style={styles.trackingButton}
+								onPress={() => navigation.navigate('GuardianBookings', { studentId: student.id, studentName: student.fullName })}
+							>
+								<Text style={styles.trackingIcon}>📅</Text>
+								<View style={styles.trackingTextContainer}>
+									<Text style={styles.trackingTitle}>Requested Visits & Bookings</Text>
+									<Text style={styles.trackingSubtitle}>Monitor requested properties and statuses</Text>
+								</View>
+								<Text style={styles.trackingArrow}>→</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity 
+								style={styles.trackingButton}
+								onPress={() => navigation.navigate('GuardianPayments', { studentId: student.id, studentName: student.fullName })}
+							>
+								<Text style={styles.trackingIcon}>💳</Text>
+								<View style={styles.trackingTextContainer}>
+									<Text style={styles.trackingTitle}>Rent & Utility Payments</Text>
+									<Text style={styles.trackingSubtitle}>Review payment proofs and history</Text>
+								</View>
+								<Text style={styles.trackingArrow}>→</Text>
+							</TouchableOpacity>
+
+							<TouchableOpacity 
+								style={styles.trackingButton}
+								onPress={() => navigation.navigate('GuardianConcerns', { studentId: student.id, studentName: student.fullName })}
+							>
+								<Text style={styles.trackingIcon}>⚠️</Text>
+								<View style={styles.trackingTextContainer}>
+									<Text style={styles.trackingTitle}>Maintenance & Safety</Text>
+									<Text style={styles.trackingSubtitle}>Track unresolved issues and concerns</Text>
+								</View>
+								<Text style={styles.trackingArrow}>→</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				)}
 			</ScrollView>
@@ -254,6 +294,21 @@ const styles = StyleSheet.create({
 	},
 	disabledButton: { opacity: 0.7 },
 	saveButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: 'bold' },
+	trackingButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: '#F5F7FA',
+		padding: 15,
+		borderRadius: 10,
+		marginBottom: 10,
+		borderWidth: 1,
+		borderColor: '#E0E0E0'
+	},
+	trackingIcon: { fontSize: 24, marginRight: 15 },
+	trackingTextContainer: { flex: 1 },
+	trackingTitle: { fontSize: 15, fontWeight: 'bold', color: '#36454F', marginBottom: 2 },
+	trackingSubtitle: { fontSize: 12, color: '#757575' },
+	trackingArrow: { fontSize: 20, color: '#2E7D32', fontWeight: 'bold' }
 });
 
 export default GuardianDashboard;
