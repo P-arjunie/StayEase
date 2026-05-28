@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Image, Dimensions } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Image, Dimensions, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { auth } from "./config/firebase";
+import { auth, db } from "./config/firebase";
+import { collection, addDoc } from 'firebase/firestore';
 
 const { width } = Dimensions.get('window');
 
@@ -22,6 +23,38 @@ const PropertyDetail = ({ navigation, route }) => {
 
 	const handleBack = () => {
 		navigation.goBack();
+	};
+
+	const handleRequestVisit = async () => {
+		try {
+			await addDoc(collection(db, 'visits'), {
+				propertyId: property.id,
+				propertyName: property.name,
+				landlordId: propertyLandlordId,
+				studentId: currentUserId,
+				status: 'pending',
+				createdAt: new Date().toISOString()
+			});
+			Alert.alert('Success', 'Visit requested successfully!');
+		} catch (e) {
+			Alert.alert('Error', 'Failed to request visit.');
+		}
+	};
+
+	const handleRequestBooking = async () => {
+		try {
+			await addDoc(collection(db, 'bookings'), {
+				propertyId: property.id,
+				propertyName: property.name,
+				landlordId: propertyLandlordId,
+				studentId: currentUserId,
+				status: 'pending',
+				createdAt: new Date().toISOString()
+			});
+			Alert.alert('Success', 'Booking requested successfully!');
+		} catch (e) {
+			Alert.alert('Error', 'Failed to request booking.');
+		}
 	};
 
 	return (
@@ -171,10 +204,19 @@ const PropertyDetail = ({ navigation, route }) => {
 
 				{/* Action Buttons */}
 				<View style={styles.actionButtons}>
-					{isLandlord && (
+					{isLandlord ? (
 						<TouchableOpacity style={styles.editButton} onPress={handleEdit}>
 							<Text style={styles.editButtonText}>✎ Edit Property</Text>
 						</TouchableOpacity>
+					) : (
+						<View style={styles.studentActions}>
+							<TouchableOpacity style={styles.visitButton} onPress={handleRequestVisit}>
+								<Text style={styles.visitButtonText}>📅 Request Visit</Text>
+							</TouchableOpacity>
+							<TouchableOpacity style={styles.bookButton} onPress={handleRequestBooking}>
+								<Text style={styles.bookButtonText}>🏠 Request Booking</Text>
+							</TouchableOpacity>
+						</View>
 					)}
 					<TouchableOpacity 
 						style={[styles.backButton, !isLandlord && styles.backButtonFull]} 
@@ -434,9 +476,45 @@ const styles = StyleSheet.create({
 		fontSize: 15,
 		fontWeight: 'bold',
 	},
-	backButton: {
+	studentActions: {
+		flexDirection: 'row',
+		gap: 10,
+		marginBottom: 10,
+	},
+	visitButton: {
+		flex: 1,
 		backgroundColor: '#FFFFFF',
 		borderColor: '#FFA500',
+		borderWidth: 2,
+		paddingVertical: 14,
+		borderRadius: 8,
+		alignItems: 'center',
+	},
+	visitButtonText: {
+		color: '#FFA500',
+		fontSize: 14,
+		fontWeight: 'bold',
+	},
+	bookButton: {
+		flex: 1,
+		backgroundColor: '#FFA500',
+		paddingVertical: 14,
+		borderRadius: 8,
+		alignItems: 'center',
+		shadowColor: '#FFA500',
+		shadowOpacity: 0.3,
+		shadowOffset: { width: 0, height: 4 },
+		shadowRadius: 8,
+		elevation: 6,
+	},
+	bookButtonText: {
+		color: '#FFFFFF',
+		fontSize: 14,
+		fontWeight: 'bold',
+	},
+	backButton: {
+		backgroundColor: '#FFFFFF',
+		borderColor: '#E0E0E0',
 		borderWidth: 2,
 		paddingVertical: 12,
 		borderRadius: 8,

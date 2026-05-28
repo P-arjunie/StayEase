@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from "./config/firebase";
+import { db, auth, getUserProfile } from "./config/firebase";
 
 const BrowseProperties = ({ navigation }) => {
 	const [properties, setProperties] = useState([]);
@@ -18,6 +18,12 @@ const BrowseProperties = ({ navigation }) => {
 		try {
 			setLoading(true);
 			const allProperties = [];
+
+			const currentUser = auth.currentUser;
+			let userProfile = null;
+			if (currentUser) {
+				userProfile = await getUserProfile(currentUser.uid);
+			}
 
 			// Get all documents from users collection to find landlords
 			const usersSnapshot = await getDocs(collection(db, 'users'));
@@ -57,12 +63,30 @@ const BrowseProperties = ({ navigation }) => {
 
 			console.log('Total properties loaded:', allProperties.length);
 
-			// Filter only active properties with available slots
+			// Filter only active properties with available slots and apply student rules
 			const activeProperties = allProperties.filter(p => {
 				const isActive = p.status === 'active';
 				const hasAvailable = (p.availableTenants || 0) > 0;
-				console.log(`Property ${p.name}: active=${isActive}, available=${hasAvailable}`);
-				return isActive && hasAvailable;
+				
+				let isCompliant = true;
+				if (userProfile && userProfile.role === 'student') {
+					if (userProfile.budgetRange && p.monthlyRent) {
+						const parts = userProfile.budgetRange.toString().split('-');
+						const maxBudget = parts.length === 2 ? parseInt(parts[1], 10) : parseInt(parts[0], 10);
+						if (!isNaN(maxBudget) && p.monthlyRent > maxBudget) {
+							isCompliant = false;
+						}
+					}
+					
+					if (userProfile.genderPreference && userProfile.genderPreference !== 'any') {
+						if (p.genderRule && p.genderRule !== 'any' && p.genderRule !== userProfile.genderPreference) {
+							isCompliant = false;
+						}
+					}
+				}
+
+				console.log(`Property ${p.name}: active=${isActive}, available=${hasAvailable}, compliant=${isCompliant}`);
+				return isActive && hasAvailable && isCompliant;
 			});
 
 			console.log('Active properties with availability:', activeProperties.length);
