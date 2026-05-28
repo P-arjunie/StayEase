@@ -79,7 +79,7 @@ const LandlordDashboard = ({ navigation }) => {
 					</View>
 					<TouchableOpacity 
 						style={styles.statCard} 
-						onPress={() => navigation.navigate('LandlordRequests')}
+						onPress={() => navigation.navigate('RequestsTab')}
 					>
 						<Text style={styles.statNumber}>{stats.pendingVisits}</Text>
 						<Text style={styles.statLabel}>Pending Visits</Text>
@@ -93,7 +93,7 @@ const LandlordDashboard = ({ navigation }) => {
 					</TouchableOpacity>
 					<TouchableOpacity 
 						style={styles.statCard} 
-						onPress={() => navigation.navigate('LandlordPayments')}
+						onPress={() => navigation.navigate('FinancesTab')}
 					>
 						<Text style={styles.statNumber}>💳</Text>
 						<Text style={styles.statLabel}>View Payments</Text>

@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { auth, db } from "./config/firebase";
 import { collection, addDoc } from 'firebase/firestore';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
@@ -48,7 +49,7 @@ const PropertyDetail = ({ navigation, route }) => {
 				status: 'pending',
 				createdAt: new Date().toISOString()
 			});
-			Alert.alert('Success', 'Visit requested successfully!');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Visit requested successfully!' });
 			setDateSelected(false);
 		} catch (e) {
 			Alert.alert('Error', 'Failed to request visit.');
@@ -79,7 +80,7 @@ const PropertyDetail = ({ navigation, route }) => {
 				status: 'pending',
 				createdAt: new Date().toISOString()
 			});
-			Alert.alert('Success', 'Booking requested successfully!');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Booking requested successfully!' });
 		} catch (e) {
 			Alert.alert('Error', 'Failed to request booking.');
 		}

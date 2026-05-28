@@ -3,6 +3,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { enableScreens } from 'react-native-screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Toast from 'react-native-toast-message';
+
 import Login from './Login';
 import RoleSelection from './RoleSelection';
 import StudentRegistration from './StudentRegistration';
@@ -27,6 +30,28 @@ import GuardianConcerns from './GuardianConcerns';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+function StudentTabs() {
+	return (
+		<Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: '#FFA500' }}>
+			<Tab.Screen name="Browse" component={BrowseProperties} options={{ tabBarLabel: 'Search', tabBarIcon: () => null }} />
+			<Tab.Screen name="MyBookings" component={MyBookings} options={{ tabBarLabel: 'Bookings', tabBarIcon: () => null }} />
+			<Tab.Screen name="Payments" component={Payments} options={{ tabBarLabel: 'Payments', tabBarIcon: () => null }} />
+			<Tab.Screen name="Profile" component={StudentDashboard} options={{ tabBarLabel: 'Profile', tabBarIcon: () => null }} />
+		</Tab.Navigator>
+	);
+}
+
+function LandlordTabs() {
+	return (
+		<Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: '#FFA500' }}>
+			<Tab.Screen name="DashboardTab" component={LandlordDashboard} options={{ tabBarLabel: 'Dashboard', tabBarIcon: () => null }} />
+			<Tab.Screen name="RequestsTab" component={LandlordRequests} options={{ tabBarLabel: 'Requests', tabBarIcon: () => null }} />
+			<Tab.Screen name="FinancesTab" component={LandlordPayments} options={{ tabBarLabel: 'Finances', tabBarIcon: () => null }} />
+		</Tab.Navigator>
+	);
+}
 
 export default function App() {
 	return (
@@ -37,18 +62,18 @@ export default function App() {
 					<Stack.Screen name="RoleSelection" component={RoleSelection} options={{ title: 'Sign Up' }} />
 					<Stack.Screen name="StudentRegistration" component={StudentRegistration} options={{ title: 'Student Registration' }} />
 					<Stack.Screen name="LandlordRegistration" component={LandlordRegistration} options={{ title: 'Landlord Registration' }} />
-					<Stack.Screen name="StudentDashboard" component={StudentDashboard} options={{ title: 'Dashboard' }} />
-					<Stack.Screen name="BrowseProperties" component={BrowseProperties} options={{ title: 'Browse Properties', headerBackTitle: 'Back' }} />
-					<Stack.Screen name="LandlordDashboard" component={LandlordDashboard} options={{ headerShown: false }} />
+					{/* Tab Navigators */}
+					<Stack.Screen name="StudentDashboard" component={StudentTabs} options={{ headerShown: false }} />
+					<Stack.Screen name="LandlordDashboard" component={LandlordTabs} options={{ headerShown: false }} />
+
+					{/* Shared / Deep Screens */}
 					<Stack.Screen name="AddProperty" component={AddProperty} options={{ title: 'Add Property', headerBackTitle: 'Back' }} />
 					<Stack.Screen name="PropertyDetail" component={PropertyDetail} options={{ title: 'Property Details', headerBackTitle: 'Back' }} />
 					<Stack.Screen name="EditProperty" component={EditProperty} options={{ title: 'Edit Property', headerBackTitle: 'Back' }} />
-					<Stack.Screen name="Payments" component={Payments} options={{ headerShown: false }} />
 					<Stack.Screen name="Concerns" component={Concerns} options={{ headerShown: false }} />
-					<Stack.Screen name="MyBookings" component={MyBookings} options={{ headerShown: false }} />
-					<Stack.Screen name="LandlordRequests" component={LandlordRequests} options={{ headerShown: false }} />
-					<Stack.Screen name="LandlordPayments" component={LandlordPayments} options={{ headerShown: false }} />
 					<Stack.Screen name="LandlordConcerns" component={LandlordConcerns} options={{ headerShown: false }} />
+					
+					{/* Guardian Screens */}
 					<Stack.Screen name="GuardianLogin" component={GuardianLogin} options={{ headerShown: false }} />
 					<Stack.Screen name="GuardianDashboard" component={GuardianDashboard} options={{ headerShown: false }} />
 					<Stack.Screen name="GuardianBookings" component={GuardianBookings} options={{ headerShown: false }} />
@@ -56,6 +81,7 @@ export default function App() {
 					<Stack.Screen name="GuardianConcerns" component={GuardianConcerns} options={{ headerShown: false }} />
 				</Stack.Navigator>
 			</NavigationContainer>
+			<Toast />
 		</SafeAreaProvider>
 	);
 }

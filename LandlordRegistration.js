@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { registerWithEmail, createUserProfile } from './config/firebase';
 import { pickImage, convertToBase64 } from './utils/imagePicker';
 import { validateEmail, validateMobile, validatePassword, validateNIC } from './utils/validations';
@@ -33,7 +34,7 @@ const LandlordRegistration = ({ navigation }) => {
 				const uploadedUrl = await uploadImageToImgBB(image.uri);
 				setProofUploaded(true);
 				setTimeout(() => setUploading(false), 500); // Small delay for animation
-				Alert.alert('Success', 'Proof uploaded successfully!');
+				Toast.show({ type: 'success', text1: 'Success', text2: 'Proof uploaded successfully!' });
 			} else {
 				setUploading(false);
 			}
@@ -142,7 +143,7 @@ const LandlordRegistration = ({ navigation }) => {
 				createdAt: new Date().toISOString(),
 			};
 			await createUserProfile(user.uid, profile);
-			Alert.alert('Success', 'Landlord registration successful');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Landlord registration successful' });
 			navigation.navigate('LandlordDashboard');
 		} catch (err) {
 			const errorMsg = handleError(err, 'Landlord Registration');
@@ -154,8 +155,12 @@ const LandlordRegistration = ({ navigation }) => {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.scrollView}>
-				<View style={styles.column}>
+			<KeyboardAvoidingView 
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				style={{ flex: 1 }}
+			>
+				<ScrollView style={styles.scrollView}>
+					<View style={styles.column}>
 					<View style={styles.view2}>
 						<Text style={styles.text2}>{"StayEase - Landlord Registration"}</Text>
 					</View>
@@ -296,6 +301,7 @@ const LandlordRegistration = ({ navigation }) => {
 					</View>
 				</View>
 			</ScrollView>
+			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 };

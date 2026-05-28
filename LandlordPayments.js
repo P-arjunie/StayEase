@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image, RefreshControl } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs, doc, updateDoc, limit, startAfter, orderBy } from 'firebase/firestore';
 import { auth, db } from "./config/firebase";
@@ -10,6 +11,7 @@ const LandlordPayments = ({ navigation }) => {
 	const [loadingMore, setLoadingMore] = useState(false);
 	const [lastVisible, setLastVisible] = useState(null);
 	const [hasMore, setHasMore] = useState(true);
+	const [refreshing, setRefreshing] = useState(false);
 	const PAGE_SIZE = 10;
 
 	const currentUserId = auth.currentUser?.uid;
@@ -18,10 +20,10 @@ const LandlordPayments = ({ navigation }) => {
 		loadPayments();
 	}, []);
 
-	const loadPayments = async () => {
+	const loadPayments = async (isRefresh = false) => {
 		if (!currentUserId) return;
 		try {
-			setLoading(true);
+			if (!isRefresh) setLoading(true);
 			const q = query(
 				collection(db, 'payments'), 
 				where('landlordId', '==', currentUserId),
@@ -47,7 +49,15 @@ const LandlordPayments = ({ navigation }) => {
 			console.error("Error loading payments:", error);
 		} finally {
 			setLoading(false);
+			setRefreshing(false);
 		}
+	};
+
+	const onRefresh = () => {
+		setRefreshing(true);
+		setHasMore(true);
+		setLastVisible(null);
+		loadPayments(true);
 	};
 
 	const loadMorePayments = async () => {
@@ -88,7 +98,7 @@ const LandlordPayments = ({ navigation }) => {
 			const reqRef = doc(db, 'payments', paymentId);
 			await updateDoc(reqRef, { status: 'verified' });
 			
-			Alert.alert('Success', 'Payment verified successfully.');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Payment verified successfully.' });
 			loadPayments();
 		} catch (error) {
 			Alert.alert('Error', 'Failed to verify payment.');
@@ -105,7 +115,11 @@ const LandlordPayments = ({ navigation }) => {
 				<Text style={styles.headerTitle}>Tenant Payments</Text>
 			</View>
 
-			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+			<ScrollView 
+				style={styles.scrollView} 
+				showsVerticalScrollIndicator={false}
+				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FFA500"]} />}
+			>
 				{loading ? (
 					<View style={styles.centerContainer}>
 						<ActivityIndicator size="large" color="#FFA500" />

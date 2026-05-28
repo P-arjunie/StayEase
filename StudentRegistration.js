@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { registerWithEmail, createUserProfile } from './config/firebase';
@@ -19,7 +19,6 @@ const StudentRegistration = ({ navigation }) => {
 	const [location, setLocation] = useState('');
 	const [minBudget, setMinBudget] = useState('');
 	const [maxBudget, setMaxBudget] = useState('');
-	const [accommodation, setAccommodation] = useState('room');
 	const [accommodation, setAccommodation] = useState('room');
 	const [genderPreference, setGenderPreference] = useState('any');
 	const [maxDistance, setMaxDistance] = useState('');
@@ -85,6 +84,7 @@ const StudentRegistration = ({ navigation }) => {
 			return;
 		}
 		
+		const budget = `${minBudget}-${maxBudget}`;
 		if (budget && !validateBudgetRange(budget)) {
 			Alert.alert('Invalid Budget', 'Budget must be a number or range (e.g., 5000 or 5000-10000)');
 			return;
@@ -162,253 +162,252 @@ const StudentRegistration = ({ navigation }) => {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.scrollView}>
-				<View style={styles.column}>
-					<View style={styles.view2}>
-						<Text style={styles.text2}>{"StayEase Registration"}</Text>
-						<Text style={styles.stepText}>Step {step} of 3</Text>
-					</View>
-					
-					{/* Progress Bar */}
-					<View style={styles.progressBarContainer}>
-						<View style={[styles.progressBarFilled, { width: `${(step / 3) * 100}%` }]} />
-					</View>
-
-					<View style={styles.column2}>
-						<View style={styles.column3}>
-							{/* Step 1: Account Details */}
-							{step === 1 && (<>
-							{/* Full Name */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Full Name *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter your full name"
-									value={fullName}
-									onChangeText={setFullName}
-								/>
-							</View>
-							{/* Email */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Email Address *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="your.email@example.com"
-									value={email}
-									onChangeText={setEmail}
-									keyboardType="email-address"
-								/>
-							</View>
-							{/* Mobile */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Mobile Number *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="+94 XX XXX XXXX"
-									value={mobile}
-									onChangeText={setMobile}
-									keyboardType="phone-pad"
-								/>
-							</View>
-							{/* Password */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Password *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter your password"
-									value={password}
-									onChangeText={setPassword}
-									secureTextEntry
-								/>
-							</View>
-							
-							<View style={styles.wizardNav}>
-								<TouchableOpacity style={styles.nextButton} onPress={() => setStep(2)}>
-									<Text style={styles.buttonText}>Next →</Text>
-								</TouchableOpacity>
-							</View>
-							</>)}
-
-							{/* Step 2: University Details */}
-							{step === 2 && (<>
-							{/* University */}
-							<View style={styles.field}>
-								<Text style={styles.label}>University Name *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter university name"
-									value={university}
-									onChangeText={setUniversity}
-								/>
-							</View>
-							{/* Faculty */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Faculty / Department</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter faculty/department (optional)"
-									value={faculty}
-									onChangeText={setFaculty}
-								/>
-							</View>
-							{/* Student ID */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Student ID Number</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter student ID"
-									value={studentId}
-									onChangeText={setStudentId}
-								/>
-							</View>
-							{/* Upload ID Card */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Student ID Card Image *</Text>
-								<TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-									<Text style={styles.imagePickerText}>{idCardImage ? 'Change ID Image' : 'Upload ID Image'}</Text>
-								</TouchableOpacity>
-								{idCardImage && <Text style={styles.imageUploadedText}>Image selected</Text>}
-							</View>
-							
-							<View style={styles.wizardNav}>
-								<TouchableOpacity style={styles.nextButton} onPress={() => setStep(3)}>
-									<Text style={styles.buttonText}>Next →</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={styles.prevButton} onPress={() => setStep(1)}>
-									<Text style={styles.prevButtonText}>← Back</Text>
-								</TouchableOpacity>
-							</View>
-							</>)}
-
-							{/* Step 3: Preferences & Guardian */}
-							{step === 3 && (<>
-							{/* Guardian Details */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Guardian Name *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter guardian's full name"
-									value={guardianName}
-									onChangeText={setGuardianName}
-								/>
-							</View>
-							<View style={styles.field}>
-								<Text style={styles.label}>Guardian Mobile *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter guardian's mobile"
-									value={guardianMobile}
-									onChangeText={setGuardianMobile}
-									keyboardType="phone-pad"
-								/>
-							</View>
-							<View style={styles.field}>
-								<Text style={styles.label}>Guardian Relationship *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="e.g., Parent, Sibling"
-									value={guardianRelation}
-									onChangeText={setGuardianRelation}
-								/>
-							</View>
-							{/* Preferred Location */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Preferred Location *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Enter preferred location"
-									value={location}
-									onChangeText={setLocation}
-								/>
-							</View>
-							{/* Budget Range */}
-							<View style={styles.rowContainer}>
-								<View style={styles.halfInput}>
-									<Text style={styles.label}>Min Budget (Rs) *</Text>
-									<TextInput
-										style={styles.input}
-										placeholder="e.g., 5000"
-										value={minBudget}
-										onChangeText={setMinBudget}
-										keyboardType="numeric"
-									/>
-								</View>
-								<View style={styles.halfInput}>
-									<Text style={styles.label}>Max Budget (Rs) *</Text>
-									<TextInput
-										style={styles.input}
-										placeholder="e.g., 15000"
-										value={maxBudget}
-										onChangeText={setMaxBudget}
-										keyboardType="numeric"
-									/>
-								</View>
-							</View>
-							{/* Gender Preference */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Gender-based Boarding *</Text>
-								<SelectPicker
-									selectedValue={genderPreference}
-									onValueChange={setGenderPreference}
-									items={[
-										{ label: 'Any', value: 'any' },
-										{ label: 'Male Only', value: 'male_only' },
-										{ label: 'Female Only', value: 'female_only' },
-									]}
-									style={styles.picker}
-									containerStyle={styles.pickerContainer}
-								/>
-							</View>
-							{/* Max Distance */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Max Distance to University (km) *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="e.g., 5"
-									value={maxDistance}
-									onChangeText={setMaxDistance}
-									keyboardType="numeric"
-								/>
-							</View>
-							{/* Accommodation Type */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Accommodation Type *</Text>
-								<SelectPicker
-									selectedValue={accommodation}
-									onValueChange={setAccommodation}
-									items={[
-										{ label: 'Room', value: 'room' },
-										{ label: 'Boarding', value: 'boarding' },
-										{ label: 'Apartment', value: 'apartment' },
-									]}
-									style={styles.picker}
-									containerStyle={styles.pickerContainer}
-								/>
-							</View>
-							{/* Terms */}
-							<TouchableOpacity style={styles.checkbox} onPress={() => setTermsAccepted(!termsAccepted)}>
-								<Text style={termsAccepted ? styles.checkboxChecked : styles.checkboxUnchecked}>
-									{termsAccepted ? '☑' : '☐'}
-								</Text>
-								<Text style={styles.checkboxText}> I accept the Terms & Conditions *</Text>
-							</TouchableOpacity>
-							{/* Register Button */}
-							<View style={styles.wizardNav}>
-								<TouchableOpacity style={[styles.button, loading && styles.buttonDisabled, { flex: 1 }]} onPress={handleRegister} disabled={loading}>
-									<Text style={styles.buttonText}>{loading ? 'Registering...' : 'Complete Registration'}</Text>
-								</TouchableOpacity>
-								<TouchableOpacity style={styles.prevButton} onPress={() => setStep(2)}>
-									<Text style={styles.prevButtonText}>← Back</Text>
-								</TouchableOpacity>
-							</View>
-							</>)}
+			<KeyboardAvoidingView 
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				style={{ flex: 1 }}
+			>
+				<ScrollView style={styles.scrollView}>
+					<View style={styles.column}>
+						<View style={styles.view2}>
+							<Text style={styles.text2}>{"StayEase Registration"}</Text>
+							<Text style={styles.stepText}>Step {step} of 3</Text>
 						</View>
-						<TouchableOpacity onPress={() => navigation.goBack()}>
-							<Text style={styles.backText}>Back to Login</Text>
-						</TouchableOpacity>
+						
+						{/* Progress Bar */}
+						<View style={styles.progressBarContainer}>
+							<View style={[styles.progressBarFilled, { width: `${(step / 3) * 100}%` }]} />
+						</View>
+
+						<View style={styles.column2}>
+							<View style={styles.column3}>
+								{/* Step 1: Account Details */}
+								{step === 1 && (<>
+								<View style={styles.field}>
+									<Text style={styles.label}>Full Name *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter your full name"
+										value={fullName}
+										onChangeText={setFullName}
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Email Address *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="your.email@example.com"
+										value={email}
+										onChangeText={setEmail}
+										keyboardType="email-address"
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Mobile Number *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="+94 XX XXX XXXX"
+										value={mobile}
+										onChangeText={setMobile}
+										keyboardType="phone-pad"
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Password *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter your password"
+										value={password}
+										onChangeText={setPassword}
+										secureTextEntry
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Confirm Password *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Re-enter password"
+										value={confirmPassword}
+										onChangeText={setConfirmPassword}
+										secureTextEntry
+									/>
+								</View>
+								
+								<View style={styles.wizardNav}>
+									<TouchableOpacity style={styles.nextButton} onPress={() => setStep(2)}>
+										<Text style={styles.buttonText}>Next →</Text>
+									</TouchableOpacity>
+								</View>
+								</>)}
+
+								{/* Step 2: University Details */}
+								{step === 2 && (<>
+								<View style={styles.field}>
+									<Text style={styles.label}>University Name *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter university name"
+										value={university}
+										onChangeText={setUniversity}
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Faculty / Department</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter faculty/department (optional)"
+										value={faculty}
+										onChangeText={setFaculty}
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Student ID Number</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter student ID"
+										value={studentId}
+										onChangeText={setStudentId}
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Student ID Card Image *</Text>
+									<TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+										<Text style={styles.imagePickerText}>{idCardImage ? 'Change ID Image' : 'Upload ID Image'}</Text>
+									</TouchableOpacity>
+									{idCardImage && <Text style={styles.imageUploadedText}>Image selected</Text>}
+								</View>
+								
+								<View style={styles.wizardNav}>
+									<TouchableOpacity style={styles.nextButton} onPress={() => setStep(3)}>
+										<Text style={styles.buttonText}>Next →</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={styles.prevButton} onPress={() => setStep(1)}>
+										<Text style={styles.prevButtonText}>← Back</Text>
+									</TouchableOpacity>
+								</View>
+								</>)}
+
+								{/* Step 3: Preferences & Guardian */}
+								{step === 3 && (<>
+								<View style={styles.field}>
+									<Text style={styles.label}>Guardian Name *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter guardian's full name"
+										value={guardianName}
+										onChangeText={setGuardianName}
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Guardian Mobile *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter guardian's mobile"
+										value={guardianMobile}
+										onChangeText={setGuardianMobile}
+										keyboardType="phone-pad"
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Guardian Relationship *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="e.g., Parent, Sibling"
+										value={guardianRelation}
+										onChangeText={setGuardianRelation}
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Preferred Location *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="Enter preferred location"
+										value={location}
+										onChangeText={setLocation}
+									/>
+								</View>
+								<View style={styles.rowContainer}>
+									<View style={styles.halfInput}>
+										<Text style={styles.label}>Min Budget (Rs) *</Text>
+										<TextInput
+											style={styles.input}
+											placeholder="e.g., 5000"
+											value={minBudget}
+											onChangeText={setMinBudget}
+											keyboardType="numeric"
+										/>
+									</View>
+									<View style={styles.halfInput}>
+										<Text style={styles.label}>Max Budget (Rs) *</Text>
+										<TextInput
+											style={styles.input}
+											placeholder="e.g., 15000"
+											value={maxBudget}
+											onChangeText={setMaxBudget}
+											keyboardType="numeric"
+										/>
+									</View>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Gender-based Boarding *</Text>
+									<SelectPicker
+										selectedValue={genderPreference}
+										onValueChange={setGenderPreference}
+										items={[
+											{ label: 'Any', value: 'any' },
+											{ label: 'Male Only', value: 'male_only' },
+											{ label: 'Female Only', value: 'female_only' },
+										]}
+										style={styles.picker}
+										containerStyle={styles.pickerContainer}
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Max Distance to University (km) *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="e.g., 5"
+										value={maxDistance}
+										onChangeText={setMaxDistance}
+										keyboardType="numeric"
+									/>
+								</View>
+								<View style={styles.field}>
+									<Text style={styles.label}>Accommodation Type *</Text>
+									<SelectPicker
+										selectedValue={accommodation}
+										onValueChange={setAccommodation}
+										items={[
+											{ label: 'Room', value: 'room' },
+											{ label: 'Boarding', value: 'boarding' },
+											{ label: 'Apartment', value: 'apartment' },
+										]}
+										style={styles.picker}
+										containerStyle={styles.pickerContainer}
+									/>
+								</View>
+								<TouchableOpacity style={styles.checkbox} onPress={() => setTermsAccepted(!termsAccepted)}>
+									<Text style={termsAccepted ? styles.checkboxChecked : styles.checkboxUnchecked}>
+										{termsAccepted ? '☑' : '☐'}
+									</Text>
+									<Text style={styles.checkboxText}> I accept the Terms & Conditions *</Text>
+								</TouchableOpacity>
+								<View style={styles.wizardNav}>
+									<TouchableOpacity style={[styles.button, loading && styles.buttonDisabled, { flex: 1 }]} onPress={handleRegister} disabled={loading}>
+										<Text style={styles.buttonText}>{loading ? 'Registering...' : 'Complete Registration'}</Text>
+									</TouchableOpacity>
+									<TouchableOpacity style={styles.prevButton} onPress={() => setStep(2)}>
+										<Text style={styles.prevButtonText}>← Back</Text>
+									</TouchableOpacity>
+								</View>
+								</>)}
+							</View>
+							<TouchableOpacity onPress={() => navigation.goBack()}>
+								<Text style={styles.backText}>Back to Login</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
-				</View>
-			</ScrollView>
+				</ScrollView>
+			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 };
@@ -456,7 +455,6 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		height: 50,
 		justifyContent: 'center',
-		overflow: 'hidden',
 	},
 	picker: { height: 50, width: '100%', color: "#36454F" },
 	checkbox: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 26, marginBottom: 20 },

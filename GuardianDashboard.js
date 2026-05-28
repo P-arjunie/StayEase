@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Alert } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
@@ -67,7 +68,7 @@ const GuardianDashboard = ({ navigation }) => {
 				guardianOverridden: true // flag to indicate rules are locked by guardian
 			});
 			
-			Alert.alert('Success', 'Student rules have been overridden and locked.');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Student rules have been overridden and locked.' });
 			loadData();
 		} catch (error) {
 			Alert.alert('Error', 'Failed to update rules.');

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image, RefreshControl } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs, doc, updateDoc, limit, startAfter, orderBy } from 'firebase/firestore';
 import { auth, db } from "./config/firebase";
@@ -10,6 +11,7 @@ const LandlordConcerns = ({ navigation }) => {
 	const [loadingMore, setLoadingMore] = useState(false);
 	const [lastVisible, setLastVisible] = useState(null);
 	const [hasMore, setHasMore] = useState(true);
+	const [refreshing, setRefreshing] = useState(false);
 	const PAGE_SIZE = 10;
 
 	const currentUserId = auth.currentUser?.uid;
@@ -18,10 +20,10 @@ const LandlordConcerns = ({ navigation }) => {
 		loadConcerns();
 	}, []);
 
-	const loadConcerns = async () => {
+	const loadConcerns = async (isRefresh = false) => {
 		if (!currentUserId) return;
 		try {
-			setLoading(true);
+			if (!isRefresh) setLoading(true);
 			const q = query(
 				collection(db, 'concerns'), 
 				where('landlordId', '==', currentUserId),
@@ -47,7 +49,15 @@ const LandlordConcerns = ({ navigation }) => {
 			console.error("Error loading concerns:", error);
 		} finally {
 			setLoading(false);
+			setRefreshing(false);
 		}
+	};
+
+	const onRefresh = () => {
+		setRefreshing(true);
+		setHasMore(true);
+		setLastVisible(null);
+		loadConcerns(true);
 	};
 
 	const loadMoreConcerns = async () => {
@@ -88,7 +98,7 @@ const LandlordConcerns = ({ navigation }) => {
 			const reqRef = doc(db, 'concerns', concernId);
 			await updateDoc(reqRef, { status: newStatus });
 			
-			Alert.alert('Success', `Concern marked as ${newStatus}`);
+			Toast.show({ type: 'success', text1: 'Success', text2: `Concern marked as ${newStatus}` });
 			loadConcerns();
 		} catch (error) {
 			Alert.alert('Error', 'Failed to update concern status.');
@@ -105,7 +115,11 @@ const LandlordConcerns = ({ navigation }) => {
 				<Text style={styles.headerTitle}>Tenant Concerns</Text>
 			</View>
 
-			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+			<ScrollView 
+				style={styles.scrollView} 
+				showsVerticalScrollIndicator={false}
+				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FFA500"]} />}
+			>
 				{loading ? (
 					<View style={styles.centerContainer}>
 						<ActivityIndicator size="large" color="#FFA500" />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Linking } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Linking, RefreshControl } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from "./config/firebase";
@@ -7,6 +8,7 @@ import { auth, db } from "./config/firebase";
 const LandlordRequests = ({ navigation }) => {
 	const [requests, setRequests] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [refreshing, setRefreshing] = useState(false);
 	const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' or 'visits'
 
 	const currentUserId = auth.currentUser?.uid;
@@ -15,10 +17,10 @@ const LandlordRequests = ({ navigation }) => {
 		loadRequests();
 	}, [activeTab]);
 
-	const loadRequests = async () => {
+	const loadRequests = async (isRefresh = false) => {
 		if (!currentUserId) return;
 		try {
-			setLoading(true);
+			if (!isRefresh) setLoading(true);
 			const collectionName = activeTab === 'bookings' ? 'bookings' : 'visits';
 			const q = query(collection(db, collectionName), where('landlordId', '==', currentUserId));
 			const snapshot = await getDocs(q);
@@ -48,7 +50,13 @@ const LandlordRequests = ({ navigation }) => {
 			console.error("Error loading requests:", error);
 		} finally {
 			setLoading(false);
+			setRefreshing(false);
 		}
+	};
+
+	const onRefresh = () => {
+		setRefreshing(true);
+		loadRequests(true);
 	};
 
 	const handleUpdateStatus = async (requestId, newStatus) => {
@@ -57,7 +65,7 @@ const LandlordRequests = ({ navigation }) => {
 			const reqRef = doc(db, collectionName, requestId);
 			await updateDoc(reqRef, { status: newStatus });
 			
-			Alert.alert('Success', `Request marked as ${newStatus}`);
+			Toast.show({ type: 'success', text1: 'Success', text2: `Request marked as ${newStatus}` });
 			loadRequests();
 		} catch (error) {
 			Alert.alert('Error', 'Failed to update request status.');
@@ -105,7 +113,11 @@ const LandlordRequests = ({ navigation }) => {
 				</TouchableOpacity>
 			</View>
 
-			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+			<ScrollView 
+				style={styles.scrollView} 
+				showsVerticalScrollIndicator={false}
+				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FFA500"]} />}
+			>
 				{loading ? (
 					<View style={styles.centerContainer}>
 						<ActivityIndicator size="large" color="#FFA500" />

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, Image, ActivityIndicator } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, Image, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createProperty } from "./config/firebase";
 import { handleError } from "./utils/errorHandler";
@@ -62,7 +63,7 @@ const AddProperty = ({ navigation, route }) => {
 				// Upload to ImgBB
 				const uploadedUrl = await uploadImageToImgBB(image.uri);
 				setPropertyImages([...propertyImages, uploadedUrl]);
-				Alert.alert('Success', 'Image added successfully');
+				Toast.show({ type: 'success', text1: 'Success', text2: 'Image added successfully' });
 			}
 		} catch (err) {
 			const errorMsg = handleError(err, 'Image Upload');
@@ -148,7 +149,7 @@ const AddProperty = ({ navigation, route }) => {
 				status: 'Pending Admin Approval',
 				createdAt: new Date().toISOString(),
 			});
-			Alert.alert('Success', 'Property published successfully!');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Property published successfully!' });
 			navigation.goBack();
 		} catch (err) {
 			const errorMsg = handleError(err, 'Add Property');
@@ -160,8 +161,12 @@ const AddProperty = ({ navigation, route }) => {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.scrollView}>
-				<View style={styles.header}>
+			<KeyboardAvoidingView 
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				style={{ flex: 1 }}
+			>
+				<ScrollView style={styles.scrollView}>
+					<View style={styles.header}>
 					<Text style={styles.headerTitle}>Add New Property</Text>
 				</View>
 
@@ -462,8 +467,9 @@ const AddProperty = ({ navigation, route }) => {
 							<Text style={styles.buttonSecondaryText}>Cancel</Text>
 						</TouchableOpacity>
 					</View>
-				</View>
-			</ScrollView>
+					</View>
+				</ScrollView>
+			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 };

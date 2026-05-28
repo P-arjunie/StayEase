@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, Image } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, Image, RefreshControl } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
 import { collection, addDoc, query, where, getDocs, orderBy } from 'firebase/firestore';
@@ -12,6 +13,7 @@ const Payments = ({ navigation }) => {
 	
 	// Form states
 	const [paymentType, setPaymentType] = useState('rent');
+	const [refreshing, setRefreshing] = useState(false);
 	const [amount, setAmount] = useState('');
 	const [reference, setReference] = useState('');
 	const [proofImage, setProofImage] = useState(null);
@@ -23,10 +25,10 @@ const Payments = ({ navigation }) => {
 		loadPayments();
 	}, []);
 
-	const loadPayments = async () => {
+	const loadPayments = async (isRefresh = false) => {
 		if (!currentUserId) return;
 		try {
-			setLoading(true);
+			if (!isRefresh) setLoading(true);
 			const q = query(
 				collection(db, 'payments'),
 				where('studentId', '==', currentUserId)
@@ -43,7 +45,13 @@ const Payments = ({ navigation }) => {
 			console.error("Error loading payments:", error);
 		} finally {
 			setLoading(false);
+			setRefreshing(false);
 		}
+	};
+
+	const onRefresh = () => {
+		setRefreshing(true);
+		loadPayments(true);
 	};
 
 	const pickImage = async () => {
@@ -92,7 +100,7 @@ const Payments = ({ navigation }) => {
 				createdAt: new Date().toISOString()
 			});
 			
-			Alert.alert('Success', 'Payment proof submitted successfully for verification.');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Payment proof submitted successfully for verification.' });
 			setAmount('');
 			setReference('');
 			setProofImage(null);
@@ -107,7 +115,11 @@ const Payments = ({ navigation }) => {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+			<ScrollView 
+				style={styles.scrollView} 
+				showsVerticalScrollIndicator={false}
+				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FFA500"]} />}
+			>
 				<View style={styles.header}>
 					<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
 						<Text style={styles.backButtonText}>← Back</Text>

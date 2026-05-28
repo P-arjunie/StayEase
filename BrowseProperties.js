@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, TextInput } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, TextInput, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, getDocs } from 'firebase/firestore';
 import { db, auth, getUserProfile } from "./config/firebase";
@@ -9,14 +9,15 @@ const BrowseProperties = ({ navigation }) => {
 	const [filteredProperties, setFilteredProperties] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
+	const [refreshing, setRefreshing] = useState(false);
 
 	useEffect(() => {
 		loadAllProperties();
 	}, []);
 
-	const loadAllProperties = async () => {
+	const loadAllProperties = async (isRefresh = false) => {
 		try {
-			setLoading(true);
+			if (!isRefresh) setLoading(true);
 			const allProperties = [];
 
 			const currentUser = auth.currentUser;
@@ -100,7 +101,13 @@ const BrowseProperties = ({ navigation }) => {
 			console.error('Error loading properties:', error);
 		} finally {
 			setLoading(false);
+			setRefreshing(false);
 		}
+	};
+
+	const onRefresh = () => {
+		setRefreshing(true);
+		loadAllProperties(true);
 	};
 
 	const handleSearch = (query) => {
@@ -122,7 +129,11 @@ const BrowseProperties = ({ navigation }) => {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+			<ScrollView 
+				style={styles.scrollView} 
+				showsVerticalScrollIndicator={false}
+				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FFA500"]} />}
+			>
 				{/* Header */}
 				<View style={styles.header}>
 					<Text style={styles.headerTitle}>Browse Properties</Text>

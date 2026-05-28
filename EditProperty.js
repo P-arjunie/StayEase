@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, Switch } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, Switch, KeyboardAvoidingView, Platform } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { updateProperty } from "./config/firebase";
 import { handleError } from "./utils/errorHandler";
@@ -49,7 +50,7 @@ const EditProperty = ({ navigation, route }) => {
 				status: isActive ? 'active' : 'inactive',
 				updatedAt: new Date().toISOString(),
 			});
-			Alert.alert('Success', 'Property updated successfully!');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Property updated successfully!' });
 			navigation.goBack();
 		} catch (err) {
 			const errorMsg = handleError(err, 'Update Property');
@@ -61,168 +62,173 @@ const EditProperty = ({ navigation, route }) => {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.scrollView}>
-				<View style={styles.header}>
-					<Text style={styles.headerTitle}>Edit Property</Text>
-				</View>
-
-				<View style={styles.formContainer}>
-					{/* Property Name */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>Property Name *</Text>
-						<TextInput
-							style={styles.input}
-							placeholder="Property name"
-							value={propertyName}
-							onChangeText={setPropertyName}
-							placeholderTextColor="#BDBDBD"
-						/>
+			<KeyboardAvoidingView 
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				style={{ flex: 1 }}
+			>
+				<ScrollView style={styles.scrollView}>
+					<View style={styles.header}>
+						<Text style={styles.headerTitle}>Edit Property</Text>
 					</View>
 
-					{/* Address */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>Address *</Text>
-						<TextInput
-							style={styles.input}
-							placeholder="Full address with city"
-							value={address}
-							onChangeText={setAddress}
-							placeholderTextColor="#BDBDBD"
-						/>
-					</View>
-
-					{/* Rent and Deposit */}
-					<View style={styles.rowContainer}>
-						<View style={styles.halfInput}>
-							<Text style={styles.label}>Monthly Rent (Rs) *</Text>
+					<View style={styles.formContainer}>
+						{/* Property Name */}
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>Property Name *</Text>
 							<TextInput
 								style={styles.input}
-								placeholder="25000"
-								value={monthlyRent}
-								onChangeText={setMonthlyRent}
-								keyboardType="numeric"
+								placeholder="Property name"
+								value={propertyName}
+								onChangeText={setPropertyName}
 								placeholderTextColor="#BDBDBD"
 							/>
 						</View>
-						<View style={styles.halfInput}>
-							<Text style={styles.label}>Deposit (Rs) *</Text>
-							<TextInput
-								style={styles.input}
-								placeholder="50000"
-								value={deposit}
-								onChangeText={setDeposit}
-								keyboardType="numeric"
-								placeholderTextColor="#BDBDBD"
-							/>
-						</View>
-					</View>
 
-					{/* Bedrooms and Bathrooms */}
-					<View style={styles.rowContainer}>
-						<View style={styles.halfInput}>
-							<Text style={styles.label}>Bedrooms *</Text>
+						{/* Address */}
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>Address *</Text>
 							<TextInput
 								style={styles.input}
-								placeholder="1"
-								value={bedrooms}
-								onChangeText={setBedrooms}
-								keyboardType="numeric"
+								placeholder="Full address with city"
+								value={address}
+								onChangeText={setAddress}
 								placeholderTextColor="#BDBDBD"
 							/>
 						</View>
-						<View style={styles.halfInput}>
-							<Text style={styles.label}>Bathrooms *</Text>
-							<TextInput
-								style={styles.input}
-								placeholder="1"
-								value={bathrooms}
-								onChangeText={setBathrooms}
-								keyboardType="numeric"
-								placeholderTextColor="#BDBDBD"
-							/>
-						</View>
-					</View>
 
-					{/* Tenant Capacity */}
-					<View style={styles.rowContainer}>
-						<View style={styles.halfInput}>
-							<Text style={styles.label}>Total Capacity *</Text>
-							<TextInput
-								style={styles.input}
-								placeholder="4"
-								value={totalTenants}
-								onChangeText={setTotalTenants}
-								keyboardType="numeric"
-								placeholderTextColor="#BDBDBD"
-							/>
-						</View>
-						<View style={styles.halfInput}>
-							<Text style={styles.label}>Available Slots *</Text>
-							<TextInput
-								style={styles.input}
-								placeholder="2"
-								value={availableTenants}
-								onChangeText={setAvailableTenants}
-								keyboardType="numeric"
-								placeholderTextColor="#BDBDBD"
-							/>
-						</View>
-					</View>
-
-					{/* Description */}
-					<View style={styles.inputGroup}>
-						<Text style={styles.label}>Description *</Text>
-						<TextInput
-							style={[styles.input, styles.textarea]}
-							placeholder="Property description"
-							value={description}
-							onChangeText={setDescription}
-							multiline
-							numberOfLines={4}
-							placeholderTextColor="#BDBDBD"
-						/>
-					</View>
-
-					{/* Status Toggle */}
-					<View style={styles.inputGroup}>
-						<View style={styles.toggleContainer}>
-							<View>
-								<Text style={styles.label}>Listing Status</Text>
-								<Text style={styles.toggleSubtext}>
-									{isActive ? 'Property is visible to students' : 'Property is hidden from searches'}
-								</Text>
+						{/* Rent and Deposit */}
+						<View style={styles.rowContainer}>
+							<View style={styles.halfInput}>
+								<Text style={styles.label}>Monthly Rent (Rs) *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="25000"
+									value={monthlyRent}
+									onChangeText={setMonthlyRent}
+									keyboardType="numeric"
+									placeholderTextColor="#BDBDBD"
+								/>
 							</View>
-							<Switch
-								trackColor={{ false: "#767577", true: "#FFA500" }}
-								thumbColor={isActive ? "#FFFFFF" : "#f4f3f4"}
-								ios_backgroundColor="#3e3e3e"
-								onValueChange={setIsActive}
-								value={isActive}
+							<View style={styles.halfInput}>
+								<Text style={styles.label}>Deposit (Rs) *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="50000"
+									value={deposit}
+									onChangeText={setDeposit}
+									keyboardType="numeric"
+									placeholderTextColor="#BDBDBD"
+								/>
+							</View>
+						</View>
+
+						{/* Bedrooms and Bathrooms */}
+						<View style={styles.rowContainer}>
+							<View style={styles.halfInput}>
+								<Text style={styles.label}>Bedrooms *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="1"
+									value={bedrooms}
+									onChangeText={setBedrooms}
+									keyboardType="numeric"
+									placeholderTextColor="#BDBDBD"
+								/>
+							</View>
+							<View style={styles.halfInput}>
+								<Text style={styles.label}>Bathrooms *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="1"
+									value={bathrooms}
+									onChangeText={setBathrooms}
+									keyboardType="numeric"
+									placeholderTextColor="#BDBDBD"
+								/>
+							</View>
+						</View>
+
+						{/* Tenant Capacity */}
+						<View style={styles.rowContainer}>
+							<View style={styles.halfInput}>
+								<Text style={styles.label}>Total Capacity *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="4"
+									value={totalTenants}
+									onChangeText={setTotalTenants}
+									keyboardType="numeric"
+									placeholderTextColor="#BDBDBD"
+								/>
+							</View>
+							<View style={styles.halfInput}>
+								<Text style={styles.label}>Available Slots *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="2"
+									value={availableTenants}
+									onChangeText={setAvailableTenants}
+									keyboardType="numeric"
+									placeholderTextColor="#BDBDBD"
+								/>
+							</View>
+						</View>
+
+						{/* Description */}
+						<View style={styles.inputGroup}>
+							<Text style={styles.label}>Description *</Text>
+							<TextInput
+								style={[styles.input, styles.textarea]}
+								placeholder="Property description"
+								value={description}
+								onChangeText={setDescription}
+								multiline
+								numberOfLines={4}
+								placeholderTextColor="#BDBDBD"
 							/>
 						</View>
-					</View>
 
-					{/* Action Buttons */}
-					<View style={styles.actionContainer}>
-						<TouchableOpacity
-							style={[styles.button, loading && styles.buttonDisabled]}
-							onPress={handleSave}
-							disabled={loading}
-						>
-							<Text style={styles.buttonText}>
-								{loading ? 'Saving...' : 'Save Changes'}
-							</Text>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.buttonSecondary}
-							onPress={() => navigation.goBack()}
-							disabled={loading}
-						>
-							<Text style={styles.buttonSecondaryText}>Cancel</Text>
-						</TouchableOpacity>
+						{/* Status Toggle */}
+						<View style={styles.inputGroup}>
+							<View style={styles.toggleContainer}>
+								<View>
+									<Text style={styles.label}>Listing Status</Text>
+									<Text style={styles.toggleSubtext}>
+										{isActive ? 'Property is visible to students' : 'Property is hidden from searches'}
+									</Text>
+								</View>
+								<Switch
+									trackColor={{ false: "#767577", true: "#FFA500" }}
+									thumbColor={isActive ? "#FFFFFF" : "#f4f3f4"}
+									ios_backgroundColor="#3e3e3e"
+									onValueChange={setIsActive}
+									value={isActive}
+								/>
+							</View>
+						</View>
+
+						{/* Action Buttons */}
+						<View style={styles.actionContainer}>
+							<TouchableOpacity
+								style={[styles.button, loading && styles.buttonDisabled]}
+								onPress={handleSave}
+								disabled={loading}
+							>
+								<Text style={styles.buttonText}>
+									{loading ? 'Saving...' : 'Save Changes'}
+								</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.buttonSecondary}
+								onPress={() => navigation.goBack()}
+								disabled={loading}
+							>
+								<Text style={styles.buttonSecondaryText}>Cancel</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
-				</View>
-			</ScrollView>
+				</ScrollView>
+			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 };

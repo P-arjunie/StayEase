@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, RefreshControl } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from "./config/firebase";
@@ -11,6 +12,7 @@ const Concerns = ({ navigation }) => {
 	
 	// Form states
 	const [type, setType] = useState('maintenance');
+	const [refreshing, setRefreshing] = useState(false);
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
 	const [submitting, setSubmitting] = useState(false);
@@ -21,10 +23,10 @@ const Concerns = ({ navigation }) => {
 		loadConcerns();
 	}, []);
 
-	const loadConcerns = async () => {
+	const loadConcerns = async (isRefresh = false) => {
 		if (!currentUserId) return;
 		try {
-			setLoading(true);
+			if (!isRefresh) setLoading(true);
 			const q = query(
 				collection(db, 'concerns'),
 				where('studentId', '==', currentUserId)
@@ -41,7 +43,13 @@ const Concerns = ({ navigation }) => {
 			console.error("Error loading concerns:", error);
 		} finally {
 			setLoading(false);
+			setRefreshing(false);
 		}
+	};
+
+	const onRefresh = () => {
+		setRefreshing(true);
+		loadConcerns(true);
 	};
 
 	const handleSubmitConcern = async () => {
@@ -76,7 +84,7 @@ const Concerns = ({ navigation }) => {
 				createdAt: new Date().toISOString()
 			});
 			
-			Alert.alert('Success', 'Concern submitted successfully. The landlord has been notified.');
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Concern submitted successfully. The landlord has been notified.' });
 			setTitle('');
 			setDescription('');
 			loadConcerns();
@@ -90,7 +98,11 @@ const Concerns = ({ navigation }) => {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+			<ScrollView 
+				style={styles.scrollView} 
+				showsVerticalScrollIndicator={false}
+				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FFA500"]} />}
+			>
 				<View style={styles.header}>
 					<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
 						<Text style={styles.backButtonText}>← Back</Text>

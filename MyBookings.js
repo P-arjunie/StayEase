@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from "./config/firebase";
@@ -8,6 +8,7 @@ const MyBookings = ({ navigation }) => {
 	const [bookings, setBookings] = useState([]);
 	const [visits, setVisits] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [refreshing, setRefreshing] = useState(false);
 	const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' or 'visits'
 
 	const currentUserId = auth.currentUser?.uid;
@@ -16,10 +17,10 @@ const MyBookings = ({ navigation }) => {
 		loadData();
 	}, []);
 
-	const loadData = async () => {
+	const loadData = async (isRefresh = false) => {
 		if (!currentUserId) return;
 		try {
-			setLoading(true);
+			if (!isRefresh) setLoading(true);
 			
 			// Load Bookings
 			const bq = query(collection(db, 'bookings'), where('studentId', '==', currentUserId));
@@ -41,7 +42,13 @@ const MyBookings = ({ navigation }) => {
 			console.error("Error loading tracking data:", error);
 		} finally {
 			setLoading(false);
+			setRefreshing(false);
 		}
+	};
+
+	const onRefresh = () => {
+		setRefreshing(true);
+		loadData(true);
 	};
 
 	const getStatusColor = (status) => {
@@ -84,7 +91,11 @@ const MyBookings = ({ navigation }) => {
 				</TouchableOpacity>
 			</View>
 
-			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+			<ScrollView 
+				style={styles.scrollView} 
+				showsVerticalScrollIndicator={false}
+				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FFA500"]} />}
+			>
 				{loading ? (
 					<Text style={styles.emptyText}>Loading data...</Text>
 				) : activeTab === 'bookings' ? (

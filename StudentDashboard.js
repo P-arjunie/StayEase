@@ -98,29 +98,7 @@ const StudentDashboard = ({ navigation }) => {
 					</View>
 				</View>
 
-				<TouchableOpacity style={styles.button} onPress={() => navigation.navigate('BrowseProperties')}>
-					<Text style={styles.text5}>
-						{"🔍 Browse Properties"}
-					</Text>
-				</TouchableOpacity>
 
-				<TouchableOpacity style={styles.button} onPress={() => navigation.navigate('MyBookings')}>
-					<Text style={styles.text5}>
-						{"📅 My Bookings & Visits"}
-					</Text>
-				</TouchableOpacity>
-
-				<TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Payments')}>
-					<Text style={styles.text5}>
-						{"💳 Payments"}
-					</Text>
-				</TouchableOpacity>
-
-				<TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Concerns')}>
-					<Text style={styles.text5}>
-						{"⚠️ Maintenance & Concerns"}
-					</Text>
-				</TouchableOpacity>
 
 				<TouchableOpacity style={styles.buttonLogout} onPress={() => navigation.navigate('Login')}>
 					<Text style={styles.text6}>
