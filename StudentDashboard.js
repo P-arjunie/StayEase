@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth, getUserProfile } from "./config/firebase";
+import { Ionicons } from '@expo/vector-icons';
+import AnimatedButton from './components/AnimatedButton';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const StudentDashboard = ({ navigation }) => {
 	const [userProfile, setUserProfile] = useState(null);
@@ -33,7 +36,7 @@ const StudentDashboard = ({ navigation }) => {
 
 				{userProfile?.guardianOverridden && (
 					<View style={styles.guardianAlert}>
-						<Text style={styles.guardianAlertIcon}>🛡️</Text>
+						<Ionicons name="shield-checkmark" size={24} color="#2E7D32" style={{ marginRight: 10 }} />
 						<View style={styles.guardianAlertTextContainer}>
 							<Text style={styles.guardianAlertTitle}>Guardian Linked & Active</Text>
 							<Text style={styles.guardianAlertText}>
@@ -100,11 +103,16 @@ const StudentDashboard = ({ navigation }) => {
 
 
 
-				<TouchableOpacity style={styles.buttonLogout} onPress={() => navigation.navigate('Login')}>
-					<Text style={styles.text6}>
-						{"Logout"}
-					</Text>
-				</TouchableOpacity>
+				<AnimatedButton onPress={() => navigation.navigate('Login')}>
+					<LinearGradient
+						colors={['#E74C3C', '#C0392B']}
+						style={styles.buttonLogout}
+						start={{ x: 0, y: 0 }}
+						end={{ x: 1, y: 0 }}
+					>
+						<Text style={styles.text6}>Logout</Text>
+					</LinearGradient>
+				</AnimatedButton>
 			</ScrollView>
 		</SafeAreaView>
 	);
@@ -153,10 +161,6 @@ const styles = StyleSheet.create({
 		marginHorizontal: 20,
 		marginBottom: 20,
 		alignItems: 'center',
-	},
-	guardianAlertIcon: {
-		fontSize: 24,
-		marginRight: 10,
 	},
 	guardianAlertTextContainer: {
 		flex: 1,

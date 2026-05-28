@@ -4,6 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginWithEmail, getUserProfile } from './config/firebase';
 import { getAuth, signOut } from 'firebase/auth';
 import { handleError } from './utils/errorHandler';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import AnimatedButton from './components/AnimatedButton';
 
 const auth = getAuth();
 
@@ -48,13 +51,19 @@ const Login = ({ navigation }) => {
 		<SafeAreaView style={styles.container}>
 			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 				<View style={styles.header}>
-					<Text style={styles.logo}>🏠 StayEase</Text>
+					<View style={styles.logoContainer}>
+						<Ionicons name="home" size={40} color="#FFFFFF" />
+					</View>
+					<Text style={styles.logoText}>StayEase</Text>
 					<Text style={styles.subtitle}>Find Your Perfect Stay</Text>
 				</View>
 
 				<View style={styles.formContainer}>
 					<View style={styles.inputGroup}>
-						<Text style={styles.label}>📧 Email Address</Text>
+						<View style={styles.labelContainer}>
+							<Ionicons name="mail" size={16} color="#36454F" style={styles.labelIcon} />
+							<Text style={styles.label}>Email Address</Text>
+						</View>
 						<TextInput
 							style={styles.input}
 							placeholder="your.email@example.com"
@@ -67,7 +76,10 @@ const Login = ({ navigation }) => {
 					</View>
 
 					<View style={styles.inputGroup}>
-						<Text style={styles.label}>🔒 Password</Text>
+						<View style={styles.labelContainer}>
+							<Ionicons name="lock-closed" size={16} color="#36454F" style={styles.labelIcon} />
+							<Text style={styles.label}>Password</Text>
+						</View>
 						<TextInput
 							style={styles.input}
 							placeholder="Enter your password"
@@ -82,16 +94,21 @@ const Login = ({ navigation }) => {
 						<Text style={styles.forgotPassword}>Forgot Password?</Text>
 					</TouchableOpacity>
 
-					<TouchableOpacity 
-						style={[styles.button, loading && styles.buttonDisabled]} 
+					<AnimatedButton 
 						onPress={handleSignIn} 
 						disabled={loading}
-						activeOpacity={0.8}
 					>
-						<Text style={styles.buttonText}>
-							{loading ? "Signing In..." : "Sign In"}
-						</Text>
-					</TouchableOpacity>
+						<LinearGradient
+							colors={['#FFB75E', '#ED8F03']}
+							style={[styles.button, loading && styles.buttonDisabled]}
+							start={{ x: 0, y: 0 }}
+							end={{ x: 1, y: 0 }}
+						>
+							<Text style={styles.buttonText}>
+								{loading ? "Signing In..." : "Sign In"}
+							</Text>
+						</LinearGradient>
+					</AnimatedButton>
 
 					<View style={styles.divider}>
 						<View style={styles.dividerLine}></View>
@@ -106,12 +123,12 @@ const Login = ({ navigation }) => {
 						</TouchableOpacity>
 					</View>
 
-					<TouchableOpacity 
-						style={styles.guardianLoginButton} 
-						onPress={() => navigation.navigate('GuardianLogin')}
-					>
-						<Text style={styles.guardianLoginText}>🛡️ Guardian Login (OTP)</Text>
-					</TouchableOpacity>
+					<AnimatedButton onPress={() => navigation.navigate('GuardianLogin')}>
+						<View style={styles.guardianLoginButton}>
+							<Ionicons name="shield-checkmark" size={18} color="#2E7D32" style={{ marginRight: 8 }} />
+							<Text style={styles.guardianLoginText}>Guardian Login (OTP)</Text>
+						</View>
+					</AnimatedButton>
 				</View>
 
 				<View style={styles.footer}>
@@ -132,17 +149,31 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 	},
 	header: {
-		paddingVertical: 60,
+		paddingVertical: 50,
 		paddingHorizontal: 20,
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
-	logo: {
-		fontSize: 36,
-		fontWeight: 'bold',
-		color: '#FFA500',
-		marginBottom: 8,
-		letterSpacing: 1,
+	logoContainer: {
+		backgroundColor: '#FFA500',
+		width: 70,
+		height: 70,
+		borderRadius: 25,
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginBottom: 15,
+		shadowColor: '#FFA500',
+		shadowOpacity: 0.4,
+		shadowOffset: { width: 0, height: 4 },
+		shadowRadius: 10,
+		elevation: 8,
+	},
+	logoText: {
+		fontSize: 32,
+		fontWeight: '800',
+		color: '#36454F',
+		marginBottom: 6,
+		letterSpacing: 0.5,
 	},
 	subtitle: {
 		fontSize: 16,
@@ -162,13 +193,20 @@ const styles = StyleSheet.create({
 		elevation: 8,
 	},
 	inputGroup: {
-		marginBottom: 20,
+		marginBottom: 22,
+	},
+	labelContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 10,
+	},
+	labelIcon: {
+		marginRight: 6,
 	},
 	label: {
 		fontSize: 14,
 		fontWeight: '600',
 		color: '#36454F',
-		marginBottom: 10,
 		letterSpacing: 0.3,
 	},
 	input: {
@@ -194,15 +232,14 @@ const styles = StyleSheet.create({
 	button: {
 		alignItems: 'center',
 		justifyContent: 'center',
-		backgroundColor: '#FFA500',
-		borderRadius: 12,
-		paddingVertical: 15,
+		borderRadius: 14,
+		paddingVertical: 16,
 		marginBottom: 20,
-		shadowColor: '#FFA500',
-		shadowOpacity: 0.3,
-		shadowOffset: { width: 0, height: 4 },
-		shadowRadius: 8,
-		elevation: 6,
+		shadowColor: '#ED8F03',
+		shadowOpacity: 0.4,
+		shadowOffset: { width: 0, height: 6 },
+		shadowRadius: 12,
+		elevation: 8,
 	},
 	buttonDisabled: {
 		backgroundColor: '#CCCCCC',
@@ -247,12 +284,14 @@ const styles = StyleSheet.create({
 	},
 	guardianLoginButton: {
 		marginTop: 24,
-		paddingVertical: 12,
+		paddingVertical: 14,
 		backgroundColor: '#F1F8E9',
-		borderRadius: 10,
+		borderRadius: 12,
 		borderWidth: 1,
 		borderColor: '#C5E1A5',
+		flexDirection: 'row',
 		alignItems: 'center',
+		justifyContent: 'center',
 	},
 	guardianLoginText: {
 		color: '#2E7D32',

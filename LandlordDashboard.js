@@ -3,6 +3,10 @@ import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIn
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "./config/firebase";
 import { getLandlordProperties } from "./config/firebase";
+import { Ionicons } from '@expo/vector-icons';
+import { PropertyCardSkeleton } from './components/SkeletonLoader';
+import AnimatedButton from './components/AnimatedButton';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const LandlordDashboard = ({ navigation }) => {
 	const [properties, setProperties] = useState([]);
@@ -63,7 +67,10 @@ const LandlordDashboard = ({ navigation }) => {
 				{/* Header */}
 				<View style={styles.header}>
 					<View style={styles.headerContent}>
-						<Text style={styles.headerTitle}>🏠 StayEase</Text>
+						<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+							<Ionicons name="home" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
+							<Text style={styles.headerTitle}>StayEase</Text>
+						</View>
 						<Text style={styles.headerSubtitle}>Manage your properties and tenants</Text>
 					</View>
 					<TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
@@ -95,15 +102,21 @@ const LandlordDashboard = ({ navigation }) => {
 						style={styles.statCard} 
 						onPress={() => navigation.navigate('FinancesTab')}
 					>
-						<Text style={styles.statNumber}>💳</Text>
+						<Ionicons name="card" size={28} color="#FFA500" style={{ marginBottom: 6 }} />
 						<Text style={styles.statLabel}>View Payments</Text>
 					</TouchableOpacity>
 				</View>
 
-				{/* Add Property Button */}
-				<TouchableOpacity style={styles.addButton} onPress={handleAddProperty}>
-					<Text style={styles.addButtonText}>+ Add New Property</Text>
-				</TouchableOpacity>
+				<AnimatedButton onPress={handleAddProperty}>
+					<LinearGradient
+						colors={['#FFB75E', '#ED8F03']}
+						style={styles.addButton}
+						start={{ x: 0, y: 0 }}
+						end={{ x: 1, y: 0 }}
+					>
+						<Text style={styles.addButtonText}>+ Add New Property</Text>
+					</LinearGradient>
+				</AnimatedButton>
 
 				{/* Properties Section */}
 				<View style={styles.section}>
@@ -111,8 +124,9 @@ const LandlordDashboard = ({ navigation }) => {
 				</View>
 
 				{loading ? (
-					<View style={styles.centerContainer}>
-						<ActivityIndicator size="large" color="#FFA500" />
+					<View style={{ paddingHorizontal: 20 }}>
+						<PropertyCardSkeleton />
+						<PropertyCardSkeleton />
 					</View>
 				) : properties.length === 0 ? (
 					<View style={styles.emptyState}>
@@ -130,7 +144,10 @@ const LandlordDashboard = ({ navigation }) => {
 							<View style={styles.propertyContent}>
 								<Text style={styles.propertyName}>{property.name}</Text>
 								<View style={styles.propertyMeta}>
-									<Text style={styles.propertyLocation}>📍 {property.address}</Text>
+									<View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+										<Ionicons name="location" size={12} color="#757575" style={{ marginRight: 4 }} />
+										<Text style={styles.propertyLocation}>{property.address}</Text>
+									</View>
 									<View style={[styles.statusBadge, property.status === 'active' ? styles.activeBadge : styles.inactiveBadge]}>
 										<Text style={styles.statusText}>
 											{property.status === 'active' ? '✓ Active' : '○ Inactive'}
@@ -139,8 +156,14 @@ const LandlordDashboard = ({ navigation }) => {
 								</View>
 								<Text style={styles.propertyPrice}>Rs {property.monthlyRent?.toLocaleString()}/month</Text>
 								<View style={styles.propertyDetails}>
-									<Text style={styles.detailText}>🛏️ {property.bedrooms} Bed</Text>
-									<Text style={styles.detailText}>🚿 {property.bathrooms} Bath</Text>
+									<View style={{ flexDirection: 'row', alignItems: 'center' }}>
+										<Ionicons name="bed-outline" size={14} color="#757575" style={{ marginRight: 4 }} />
+										<Text style={styles.detailText}>{property.bedrooms} Bed</Text>
+									</View>
+									<View style={{ flexDirection: 'row', alignItems: 'center' }}>
+										<Ionicons name="water-outline" size={14} color="#757575" style={{ marginRight: 4 }} />
+										<Text style={styles.detailText}>{property.bathrooms} Bath</Text>
+									</View>
 								</View>
 								<View style={styles.actionButtons}>
 									<TouchableOpacity
@@ -188,7 +211,6 @@ const styles = StyleSheet.create({
 		fontSize: 22,
 		fontWeight: 'bold',
 		color: '#FFFFFF',
-		marginBottom: 4,
 	},
 	headerSubtitle: {
 		fontSize: 13,

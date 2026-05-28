@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Toast from 'react-native-toast-message';
+import { Ionicons } from '@expo/vector-icons';
 
 import Login from './Login';
 import RoleSelection from './RoleSelection';
@@ -35,10 +36,10 @@ const Tab = createBottomTabNavigator();
 function StudentTabs() {
 	return (
 		<Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: '#FFA500' }}>
-			<Tab.Screen name="Browse" component={BrowseProperties} options={{ tabBarLabel: 'Search', tabBarIcon: () => null }} />
-			<Tab.Screen name="MyBookings" component={MyBookings} options={{ tabBarLabel: 'Bookings', tabBarIcon: () => null }} />
-			<Tab.Screen name="Payments" component={Payments} options={{ tabBarLabel: 'Payments', tabBarIcon: () => null }} />
-			<Tab.Screen name="Profile" component={StudentDashboard} options={{ tabBarLabel: 'Profile', tabBarIcon: () => null }} />
+			<Tab.Screen name="Browse" component={BrowseProperties} options={{ tabBarLabel: 'Search', tabBarIcon: ({color, size}) => <Ionicons name="search" size={size} color={color} /> }} />
+			<Tab.Screen name="MyBookings" component={MyBookings} options={{ tabBarLabel: 'Bookings', tabBarIcon: ({color, size}) => <Ionicons name="calendar" size={size} color={color} /> }} />
+			<Tab.Screen name="Payments" component={Payments} options={{ tabBarLabel: 'Payments', tabBarIcon: ({color, size}) => <Ionicons name="card" size={size} color={color} /> }} />
+			<Tab.Screen name="Profile" component={StudentDashboard} options={{ tabBarLabel: 'Profile', tabBarIcon: ({color, size}) => <Ionicons name="person" size={size} color={color} /> }} />
 		</Tab.Navigator>
 	);
 }
@@ -46,9 +47,9 @@ function StudentTabs() {
 function LandlordTabs() {
 	return (
 		<Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: '#FFA500' }}>
-			<Tab.Screen name="DashboardTab" component={LandlordDashboard} options={{ tabBarLabel: 'Dashboard', tabBarIcon: () => null }} />
-			<Tab.Screen name="RequestsTab" component={LandlordRequests} options={{ tabBarLabel: 'Requests', tabBarIcon: () => null }} />
-			<Tab.Screen name="FinancesTab" component={LandlordPayments} options={{ tabBarLabel: 'Finances', tabBarIcon: () => null }} />
+			<Tab.Screen name="DashboardTab" component={LandlordDashboard} options={{ tabBarLabel: 'Dashboard', tabBarIcon: ({color, size}) => <Ionicons name="grid" size={size} color={color} /> }} />
+			<Tab.Screen name="RequestsTab" component={LandlordRequests} options={{ tabBarLabel: 'Requests', tabBarIcon: ({color, size}) => <Ionicons name="document-text" size={size} color={color} /> }} />
+			<Tab.Screen name="FinancesTab" component={LandlordPayments} options={{ tabBarLabel: 'Finances', tabBarIcon: ({color, size}) => <Ionicons name="cash" size={size} color={color} /> }} />
 		</Tab.Navigator>
 	);
 }

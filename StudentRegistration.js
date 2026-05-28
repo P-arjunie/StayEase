@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { registerWithEmail, createUserProfile } from './config/firebase';
 import SelectPicker from './components/SelectPicker';
+import AnimatedButton from './components/AnimatedButton';
+import { LinearGradient } from 'expo-linear-gradient';
 import { validateEmail, validateMobile, validatePassword, validateBudgetRange, validateStudentID } from './utils/validations';
 import { handleError } from './utils/errorHandler';
 
@@ -233,9 +235,11 @@ const StudentRegistration = ({ navigation }) => {
 								</View>
 								
 								<View style={styles.wizardNav}>
-									<TouchableOpacity style={styles.nextButton} onPress={() => setStep(2)}>
-										<Text style={styles.buttonText}>Next →</Text>
-									</TouchableOpacity>
+									<AnimatedButton style={{ flex: 1 }} onPress={() => setStep(2)}>
+										<LinearGradient colors={['#FFB75E', '#ED8F03']} style={styles.nextButton} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+											<Text style={styles.buttonText}>Next →</Text>
+										</LinearGradient>
+									</AnimatedButton>
 								</View>
 								</>)}
 
@@ -277,9 +281,11 @@ const StudentRegistration = ({ navigation }) => {
 								</View>
 								
 								<View style={styles.wizardNav}>
-									<TouchableOpacity style={styles.nextButton} onPress={() => setStep(3)}>
-										<Text style={styles.buttonText}>Next →</Text>
-									</TouchableOpacity>
+									<AnimatedButton style={{ flex: 1 }} onPress={() => setStep(3)}>
+										<LinearGradient colors={['#FFB75E', '#ED8F03']} style={styles.nextButton} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+											<Text style={styles.buttonText}>Next →</Text>
+										</LinearGradient>
+									</AnimatedButton>
 									<TouchableOpacity style={styles.prevButton} onPress={() => setStep(1)}>
 										<Text style={styles.prevButtonText}>← Back</Text>
 									</TouchableOpacity>
@@ -392,9 +398,11 @@ const StudentRegistration = ({ navigation }) => {
 									<Text style={styles.checkboxText}> I accept the Terms & Conditions *</Text>
 								</TouchableOpacity>
 								<View style={styles.wizardNav}>
-									<TouchableOpacity style={[styles.button, loading && styles.buttonDisabled, { flex: 1 }]} onPress={handleRegister} disabled={loading}>
-										<Text style={styles.buttonText}>{loading ? 'Registering...' : 'Complete Registration'}</Text>
-									</TouchableOpacity>
+									<AnimatedButton style={{ flex: 1 }} onPress={handleRegister} disabled={loading}>
+										<LinearGradient colors={['#FFB75E', '#ED8F03']} style={[styles.button, loading && styles.buttonDisabled]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+											<Text style={styles.buttonText}>{loading ? 'Registering...' : 'Complete Registration'}</Text>
+										</LinearGradient>
+									</AnimatedButton>
 									<TouchableOpacity style={styles.prevButton} onPress={() => setStep(2)}>
 										<Text style={styles.prevButtonText}>← Back</Text>
 									</TouchableOpacity>
@@ -414,6 +422,18 @@ const StudentRegistration = ({ navigation }) => {
 
 const styles = StyleSheet.create({
 	container: { flex: 1, backgroundColor: "#FFFFFF" },
+	button: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		borderRadius: 12,
+		paddingVertical: 15,
+		shadowColor: '#ED8F03',
+		shadowOpacity: 0.3,
+		shadowOffset: { width: 0, height: 4 },
+		shadowRadius: 8,
+		elevation: 6,
+		flex: 1,
+	},
 	scrollView: {
 		flex: 1,
 		backgroundColor: "#F5F5F5",
@@ -461,14 +481,6 @@ const styles = StyleSheet.create({
 	checkboxChecked: { fontSize: 18, color: '#FFA500' },
 	checkboxUnchecked: { fontSize: 18, color: '#D3D3D3' },
 	checkboxText: { fontSize: 13, color: '#36454F' },
-	button: {
-		alignItems: "center",
-		backgroundColor: "#FFA500",
-		borderRadius: 8,
-		paddingVertical: 12,
-		marginHorizontal: 26,
-		marginBottom: 10,
-	},
 	buttonDisabled: {
 		opacity: 0.6,
 		backgroundColor: "#CCCCCC",
@@ -509,9 +521,14 @@ const styles = StyleSheet.create({
 	nextButton: {
 		flex: 1,
 		alignItems: "center",
-		backgroundColor: "#FFA500",
-		borderRadius: 8,
-		paddingVertical: 12,
+		justifyContent: 'center',
+		borderRadius: 12,
+		paddingVertical: 15,
+		shadowColor: '#ED8F03',
+		shadowOpacity: 0.3,
+		shadowOffset: { width: 0, height: 4 },
+		shadowRadius: 8,
+		elevation: 6,
 	},
 	prevButton: {
 		alignItems: "center",

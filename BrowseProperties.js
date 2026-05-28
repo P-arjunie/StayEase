@@ -3,6 +3,10 @@ import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIn
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, getDocs } from 'firebase/firestore';
 import { db, auth, getUserProfile } from "./config/firebase";
+import { Ionicons } from '@expo/vector-icons';
+import { PropertyCardSkeleton } from './components/SkeletonLoader';
+import AnimatedButton from './components/AnimatedButton';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const BrowseProperties = ({ navigation }) => {
 	const [properties, setProperties] = useState([]);
@@ -149,7 +153,7 @@ const BrowseProperties = ({ navigation }) => {
 						onChangeText={handleSearch}
 						placeholderTextColor="#BDBDBD"
 					/>
-					<Text style={styles.searchIcon}>🔍</Text>
+					<Ionicons name="search" size={18} color="#757575" style={styles.searchIcon} />
 				</View>
 
 				{/* Properties Count */}
@@ -161,13 +165,14 @@ const BrowseProperties = ({ navigation }) => {
 
 				{/* Loading State */}
 				{loading ? (
-					<View style={styles.centerContainer}>
-						<ActivityIndicator size="large" color="#FFA500" />
-						<Text style={styles.loadingText}>Loading properties...</Text>
+					<View style={styles.propertiesContainer}>
+						<PropertyCardSkeleton />
+						<PropertyCardSkeleton />
+						<PropertyCardSkeleton />
 					</View>
 				) : filteredProperties.length === 0 ? (
 					<View style={styles.emptyState}>
-						<Text style={styles.emptyIcon}>🏠</Text>
+						<Ionicons name="home-outline" size={56} color="#E0E0E0" style={{ marginBottom: 12 }} />
 						<Text style={styles.emptyText}>
 							{properties.length === 0 ? 'No properties available yet' : 'No properties match your search'}
 						</Text>
@@ -178,13 +183,13 @@ const BrowseProperties = ({ navigation }) => {
 				) : (
 					<View style={styles.propertiesContainer}>
 						{filteredProperties.map((property, index) => (
-							<TouchableOpacity
+							<AnimatedButton
 								key={index}
 								style={styles.propertyCard}
 								onPress={() => handleViewProperty(property)}
-								activeOpacity={0.9}
 							>
-								<Image
+								<View style={{ overflow: 'hidden', borderRadius: 12 }}>
+									<Image
 									source={{ uri: property.image || "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/0G0oCbffgQ/conpoajh_expires_30_days.png" }}
 									resizeMode="cover"
 									style={styles.propertyImage}
@@ -199,19 +204,22 @@ const BrowseProperties = ({ navigation }) => {
 
 								<View style={styles.propertyContent}>
 									<Text style={styles.propertyName}>{property.name}</Text>
-									<Text style={styles.propertyLocation}>📍 {property.address}</Text>
+									<View style={styles.locationContainer}>
+										<Ionicons name="location" size={14} color="#757575" />
+										<Text style={styles.propertyLocation}>{property.address}</Text>
+									</View>
 
 									<View style={styles.propertyMetaRow}>
 										<View style={styles.metaItem}>
-											<Text style={styles.metaIcon}>🛏️</Text>
+											<Ionicons name="bed-outline" size={16} color="#757575" />
 											<Text style={styles.metaText}>{property.bedrooms} Bed</Text>
 										</View>
 										<View style={styles.metaItem}>
-											<Text style={styles.metaIcon}>🚿</Text>
+											<Ionicons name="water-outline" size={16} color="#757575" />
 											<Text style={styles.metaText}>{property.bathrooms} Bath</Text>
 										</View>
 										<View style={styles.metaItem}>
-											<Text style={styles.metaIcon}>👥</Text>
+											<Ionicons name="people-outline" size={16} color="#757575" />
 											<Text style={styles.metaText}>{property.availableTenants}/{property.totalTenants}</Text>
 										</View>
 									</View>
@@ -220,14 +228,19 @@ const BrowseProperties = ({ navigation }) => {
 										Rs {property.monthlyRent?.toLocaleString()}/month
 									</Text>
 
-									<TouchableOpacity
-										style={styles.viewButton}
-										onPress={() => handleViewProperty(property)}
-									>
-										<Text style={styles.viewButtonText}>View Details</Text>
+									<TouchableOpacity onPress={() => handleViewProperty(property)}>
+										<LinearGradient
+											colors={['#FFB75E', '#ED8F03']}
+											style={styles.viewButton}
+											start={{ x: 0, y: 0 }}
+											end={{ x: 1, y: 0 }}
+										>
+											<Text style={styles.viewButtonText}>View Details</Text>
+										</LinearGradient>
 									</TouchableOpacity>
 								</View>
-							</TouchableOpacity>
+								</View>
+							</AnimatedButton>
 						))}
 					</View>
 				)}
@@ -361,10 +374,15 @@ const styles = StyleSheet.create({
 		color: '#36454F',
 		marginBottom: 4,
 	},
+	locationContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 10,
+	},
 	propertyLocation: {
 		fontSize: 13,
 		color: '#757575',
-		marginBottom: 10,
+		marginLeft: 4,
 	},
 	propertyMetaRow: {
 		flexDirection: 'row',
