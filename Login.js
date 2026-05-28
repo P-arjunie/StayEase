@@ -105,6 +105,13 @@ const Login = ({ navigation }) => {
 							<Text style={styles.signupLink}>Sign Up</Text>
 						</TouchableOpacity>
 					</View>
+
+					<TouchableOpacity 
+						style={styles.guardianLoginButton} 
+						onPress={() => navigation.navigate('GuardianLogin')}
+					>
+						<Text style={styles.guardianLoginText}>🛡️ Guardian Login (OTP)</Text>
+					</TouchableOpacity>
 				</View>
 
 				<View style={styles.footer}>
@@ -237,6 +244,20 @@ const styles = StyleSheet.create({
 		color: '#FFA500',
 		fontWeight: '700',
 		textDecorationLine: 'underline',
+	},
+	guardianLoginButton: {
+		marginTop: 24,
+		paddingVertical: 12,
+		backgroundColor: '#F1F8E9',
+		borderRadius: 10,
+		borderWidth: 1,
+		borderColor: '#C5E1A5',
+		alignItems: 'center',
+	},
+	guardianLoginText: {
+		color: '#2E7D32',
+		fontSize: 14,
+		fontWeight: '700',
 	},
 	footer: {
 		alignItems: 'center',
