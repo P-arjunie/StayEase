@@ -6,14 +6,18 @@ import { auth } from "./config/firebase";
 const { width } = Dimensions.get('window');
 
 const PropertyDetail = ({ navigation, route }) => {
-	const { property } = route.params;
+	const { property, landlordId } = route.params;
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
 	const images = property.images || [property.image];
 	const occupiedSlots = (property.totalTenants || 0) - (property.availableTenants || 0);
+	const currentUserId = auth.currentUser?.uid;
+	// Use landlordId from route params first, then fall back to property.landlordId
+	const propertyLandlordId = landlordId || property.landlordId;
+	const isLandlord = propertyLandlordId && currentUserId === propertyLandlordId;
 
 	const handleEdit = () => {
-		navigation.navigate('EditProperty', { property, userId: auth.currentUser?.uid });
+		navigation.navigate('EditProperty', { property, userId: currentUserId });
 	};
 
 	const handleBack = () => {
@@ -167,10 +171,15 @@ const PropertyDetail = ({ navigation, route }) => {
 
 				{/* Action Buttons */}
 				<View style={styles.actionButtons}>
-					<TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-						<Text style={styles.editButtonText}>✎ Edit Property</Text>
-					</TouchableOpacity>
-					<TouchableOpacity style={styles.backButton} onPress={handleBack}>
+					{isLandlord && (
+						<TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+							<Text style={styles.editButtonText}>✎ Edit Property</Text>
+						</TouchableOpacity>
+					)}
+					<TouchableOpacity 
+						style={[styles.backButton, !isLandlord && styles.backButtonFull]} 
+						onPress={handleBack}
+					>
 						<Text style={styles.backButtonText}>← Back</Text>
 					</TouchableOpacity>
 				</View>
@@ -432,6 +441,10 @@ const styles = StyleSheet.create({
 		paddingVertical: 12,
 		borderRadius: 8,
 		alignItems: 'center',
+		flex: 1,
+	},
+	backButtonFull: {
+		flex: 1,
 	},
 	backButtonText: {
 		color: '#FFA500',

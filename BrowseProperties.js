@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { collection, getDocs, db } from "./config/firebase";
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from "./config/firebase";
 
 const BrowseProperties = ({ navigation }) => {
 	const [properties, setProperties] = useState([]);
@@ -18,28 +19,58 @@ const BrowseProperties = ({ navigation }) => {
 			setLoading(true);
 			const allProperties = [];
 
-			// Get all landlords
-			const landlordsSnapshot = await getDocs(collection(db, 'landlords'));
+			// Get all documents from users collection to find landlords
+			const usersSnapshot = await getDocs(collection(db, 'users'));
+			console.log('Users found:', usersSnapshot.docs.length);
 
-			// For each landlord, get their properties
-			for (const landlordDoc of landlordsSnapshot.docs) {
-				const propertiesSnapshot = await getDocs(
-					collection(db, 'landlords', landlordDoc.id, 'properties')
-				);
+			// For each user who is a landlord, get their properties
+			for (const userDoc of usersSnapshot.docs) {
+				const userData = userDoc.data();
+				
+				// Only process landlords
+				if (userData.role !== 'landlord') {
+					continue;
+				}
 
-				propertiesSnapshot.forEach(propDoc => {
-					allProperties.push({
-						id: propDoc.id,
-						landlordId: landlordDoc.id,
-						...propDoc.data(),
+				console.log(`Processing landlord: ${userDoc.id}`);
+				
+				try {
+					const propertiesSnapshot = await getDocs(
+						collection(db, 'landlords', userDoc.id, 'properties')
+					);
+
+					console.log(`Properties for landlord ${userDoc.id}:`, propertiesSnapshot.docs.length);
+
+					propertiesSnapshot.forEach(propDoc => {
+						const propertyData = propDoc.data();
+						console.log('Property data:', propertyData);
+						allProperties.push({
+							id: propDoc.id,
+							landlordId: userDoc.id,
+							...propertyData,
+						});
 					});
-				});
+				} catch (err) {
+					console.log(`No properties found for landlord ${userDoc.id}:`, err.message);
+				}
 			}
 
+			console.log('Total properties loaded:', allProperties.length);
+
 			// Filter only active properties with available slots
-			const activeProperties = allProperties.filter(p => p.status === 'active' && p.availableTenants > 0);
-			setProperties(activeProperties);
-			setFilteredProperties(activeProperties);
+			const activeProperties = allProperties.filter(p => {
+				const isActive = p.status === 'active';
+				const hasAvailable = (p.availableTenants || 0) > 0;
+				console.log(`Property ${p.name}: active=${isActive}, available=${hasAvailable}`);
+				return isActive && hasAvailable;
+			});
+
+			console.log('Active properties with availability:', activeProperties.length);
+			
+			// If no active properties found, show all properties for debugging
+			const propertiesToShow = activeProperties.length > 0 ? activeProperties : allProperties;
+			setProperties(propertiesToShow);
+			setFilteredProperties(propertiesToShow);
 		} catch (error) {
 			console.error('Error loading properties:', error);
 		} finally {
