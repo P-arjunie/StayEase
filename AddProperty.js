@@ -21,6 +21,8 @@ const AddProperty = ({ navigation, route }) => {
 	const [selectedFacilities, setSelectedFacilities] = useState([]);
 	const [selectedTimes, setSelectedTimes] = useState([]);
 	const [propertyImages, setPropertyImages] = useState([]);
+	const [gnCertificateImage, setGnCertificateImage] = useState(null);
+	const [utilityBillImage, setUtilityBillImage] = useState(null);
 	const [uploadingImages, setUploadingImages] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [genderRule, setGenderRule] = useState('any');
@@ -111,6 +113,11 @@ const AddProperty = ({ navigation, route }) => {
 			return;
 		}
 
+		if (!gnCertificateImage || !utilityBillImage) {
+			Alert.alert('Missing Documents', 'Grama Niladhari certificate and a recent Utility Bill are mandatory for property verification in Sri Lanka.');
+			return;
+		}
+
 		const total = parseInt(totalTenants);
 		const available = parseInt(availableTenants);
 
@@ -136,7 +143,9 @@ const AddProperty = ({ navigation, route }) => {
 				genderRule: genderRule,
 				images: propertyImages,
 				image: propertyImages[0] || 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/0G0oCbffgQ/conpoajh_expires_30_days.png',
-				status: 'active',
+				gnCertificateImage: gnCertificateImage,
+				utilityBillImage: utilityBillImage,
+				status: 'Pending Admin Approval',
 				createdAt: new Date().toISOString(),
 			});
 			Alert.alert('Success', 'Property published successfully!');
@@ -379,6 +388,58 @@ const AddProperty = ({ navigation, route }) => {
 									</Text>
 								</>
 							)}
+						</TouchableOpacity>
+					</View>
+
+					{/* Verification Documents */}
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Legal Verification Documents *</Text>
+						<Text style={styles.imageHint}>Required for approval in Sri Lanka (GN Certificate & Utility Bill)</Text>
+						
+						<TouchableOpacity
+							style={[styles.docUploadButton, gnCertificateImage && styles.docUploadSuccess]}
+							onPress={async () => {
+								try {
+									const img = await pickImage();
+									if (img) {
+										setUploadingImages(true);
+										const url = await uploadImageToImgBB(img.uri);
+										setGnCertificateImage(url);
+									}
+								} catch (e) {
+									Alert.alert('Error', handleError(e, 'GN Upload'));
+								} finally {
+									setUploadingImages(false);
+								}
+							}}
+							disabled={uploadingImages}
+						>
+							<Text style={gnCertificateImage ? styles.docUploadTextSuccess : styles.docUploadText}>
+								{gnCertificateImage ? '✅ GN Certificate Uploaded' : '📄 Upload GN Certificate'}
+							</Text>
+						</TouchableOpacity>
+
+						<TouchableOpacity
+							style={[styles.docUploadButton, utilityBillImage && styles.docUploadSuccess]}
+							onPress={async () => {
+								try {
+									const img = await pickImage();
+									if (img) {
+										setUploadingImages(true);
+										const url = await uploadImageToImgBB(img.uri);
+										setUtilityBillImage(url);
+									}
+								} catch (e) {
+									Alert.alert('Error', handleError(e, 'Utility Upload'));
+								} finally {
+									setUploadingImages(false);
+								}
+							}}
+							disabled={uploadingImages}
+						>
+							<Text style={utilityBillImage ? styles.docUploadTextSuccess : styles.docUploadText}>
+								{utilityBillImage ? '✅ Utility Bill Uploaded' : '📄 Upload Recent Utility Bill'}
+							</Text>
 						</TouchableOpacity>
 					</View>
 
@@ -655,6 +716,29 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		color: '#999999',
 		fontWeight: '500',
+	},
+	docUploadButton: {
+		backgroundColor: '#F5F7FA',
+		borderColor: '#D3D3D3',
+		borderRadius: 8,
+		borderWidth: 1,
+		paddingVertical: 14,
+		alignItems: 'center',
+		marginBottom: 10,
+	},
+	docUploadSuccess: {
+		backgroundColor: '#E8F5E9',
+		borderColor: '#4CAF50',
+	},
+	docUploadText: {
+		color: '#36454F',
+		fontSize: 14,
+		fontWeight: '600',
+	},
+	docUploadTextSuccess: {
+		color: '#2E7D32',
+		fontSize: 14,
+		fontWeight: 'bold',
 	},
 });
 
