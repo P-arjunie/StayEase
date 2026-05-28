@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { createProperty } from "./config/firebase";
 import { handleError } from "./utils/errorHandler";
 import { pickImage, convertToBase64 } from "./utils/imagePicker";
+import SelectPicker from './components/SelectPicker';
 
 const AddProperty = ({ navigation, route }) => {
 	const userId = route?.params?.userId;
@@ -22,6 +23,7 @@ const AddProperty = ({ navigation, route }) => {
 	const [propertyImages, setPropertyImages] = useState([]);
 	const [uploadingImages, setUploadingImages] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [genderRule, setGenderRule] = useState('any');
 
 	const facilities = ['WiFi', 'AC', 'Parking', 'Furnished', 'Kitchen', 'Laundry'];
 	const visitTimes = ['10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM'];
@@ -131,6 +133,7 @@ const AddProperty = ({ navigation, route }) => {
 				description,
 				facilities: selectedFacilities,
 				visitTimes: selectedTimes,
+				genderRule: genderRule,
 				images: propertyImages,
 				image: propertyImages[0] || 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/0G0oCbffgQ/conpoajh_expires_30_days.png',
 				status: 'active',
@@ -265,6 +268,22 @@ const AddProperty = ({ navigation, route }) => {
 							multiline
 							numberOfLines={4}
 							placeholderTextColor="#BDBDBD"
+						/>
+					</View>
+
+					{/* Boarding Rules */}
+					<View style={styles.inputGroup}>
+						<Text style={styles.label}>Boarding Rule (Gender) *</Text>
+						<SelectPicker
+							selectedValue={genderRule}
+							onValueChange={setGenderRule}
+							items={[
+								{ label: 'Any', value: 'any' },
+								{ label: 'Male Only', value: 'male_only' },
+								{ label: 'Female Only', value: 'female_only' },
+							]}
+							containerStyle={styles.pickerContainer}
+							style={styles.picker}
 						/>
 					</View>
 
@@ -441,6 +460,15 @@ const styles = StyleSheet.create({
 		paddingBottom: 60,
 		textAlignVertical: 'top',
 	},
+	pickerContainer: {
+		backgroundColor: '#F5F7FA',
+		borderColor: '#E0E0E0',
+		borderWidth: 1,
+		borderRadius: 8,
+		height: 48,
+		justifyContent: 'center',
+	},
+	picker: { height: 48, width: '100%' },
 	rowContainer: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
