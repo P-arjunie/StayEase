@@ -13,6 +13,9 @@ import AddProperty from './AddProperty';
 import PropertyDetail from './PropertyDetail';
 import EditProperty from './EditProperty';
 import BrowseProperties from './BrowseProperties';
+import Payments from './Payments';
+import Concerns from './Concerns';
+import MyBookings from './MyBookings';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -32,6 +35,9 @@ export default function App() {
 					<Stack.Screen name="AddProperty" component={AddProperty} options={{ title: 'Add Property', headerBackTitle: 'Back' }} />
 					<Stack.Screen name="PropertyDetail" component={PropertyDetail} options={{ title: 'Property Details', headerBackTitle: 'Back' }} />
 					<Stack.Screen name="EditProperty" component={EditProperty} options={{ title: 'Edit Property', headerBackTitle: 'Back' }} />
+					<Stack.Screen name="Payments" component={Payments} options={{ headerShown: false }} />
+					<Stack.Screen name="Concerns" component={Concerns} options={{ headerShown: false }} />
+					<Stack.Screen name="MyBookings" component={MyBookings} options={{ headerShown: false }} />
 				</Stack.Navigator>
 			</NavigationContainer>
 		</SafeAreaProvider>
