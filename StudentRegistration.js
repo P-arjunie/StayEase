@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { registerWithEmail, createUserProfile } from './config/firebase';
 import SelectPicker from './components/SelectPicker';
 import { validateEmail, validateMobile, validatePassword, validateBudgetRange, validateStudentID } from './utils/validations';
@@ -18,8 +19,25 @@ const StudentRegistration = ({ navigation }) => {
 	const [location, setLocation] = useState('');
 	const [budget, setBudget] = useState('');
 	const [accommodation, setAccommodation] = useState('room');
+	const [idCardImage, setIdCardImage] = useState(null);
+	const [guardianName, setGuardianName] = useState('');
+	const [guardianMobile, setGuardianMobile] = useState('');
+	const [guardianRelation, setGuardianRelation] = useState('');
 	const [termsAccepted, setTermsAccepted] = useState(false);
 	const [loading, setLoading] = useState(false);
+
+	const pickImage = async () => {
+		let result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ['images'],
+			allowsEditing: true,
+			aspect: [4, 3],
+			quality: 1,
+		});
+
+		if (!result.canceled) {
+			setIdCardImage(result.assets[0].uri);
+		}
+	};
 
 	const handleRegister = async () => {
 		if (!fullName || !email || !mobile || !password || !confirmPassword) {
@@ -72,6 +90,21 @@ const StudentRegistration = ({ navigation }) => {
 			return;
 		}
 		
+		if (!idCardImage) {
+			Alert.alert('Missing ID Card', 'Please upload your Student ID Card');
+			return;
+		}
+
+		if (!guardianName || !guardianMobile || !guardianRelation) {
+			Alert.alert('Missing Guardian Details', 'Please fill all guardian details');
+			return;
+		}
+		
+		if (!validateMobile(guardianMobile)) {
+			Alert.alert('Invalid Guardian Mobile', 'Please enter a valid mobile number for guardian');
+			return;
+		}
+
 		if (!termsAccepted) {
 			Alert.alert('Terms Required', 'Please accept terms and conditions');
 			return;
@@ -88,9 +121,16 @@ const StudentRegistration = ({ navigation }) => {
 				university,
 				faculty,
 				studentId,
+				idCardImage,
+				guardian: {
+					name: guardianName,
+					mobile: guardianMobile,
+					relationship: guardianRelation,
+				},
 				preferredLocation: location,
 				budgetRange: budget,
 				accommodationType: accommodation,
+				status: 'Pending Verification',
 				createdAt: new Date().toISOString(),
 			};
 			await createUserProfile(user.uid, profile);
@@ -192,9 +232,46 @@ const StudentRegistration = ({ navigation }) => {
 								<Text style={styles.label}>Student ID Number</Text>
 								<TextInput
 									style={styles.input}
-									placeholder="Enter student ID (optional)"
+									placeholder="Enter student ID"
 									value={studentId}
 									onChangeText={setStudentId}
+								/>
+							</View>
+							{/* Upload ID Card */}
+							<View style={styles.field}>
+								<Text style={styles.label}>Student ID Card Image *</Text>
+								<TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+									<Text style={styles.imagePickerText}>{idCardImage ? 'Change ID Image' : 'Upload ID Image'}</Text>
+								</TouchableOpacity>
+								{idCardImage && <Text style={styles.imageUploadedText}>Image selected</Text>}
+							</View>
+							{/* Guardian Details */}
+							<View style={styles.field}>
+								<Text style={styles.label}>Guardian Name *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="Enter guardian's full name"
+									value={guardianName}
+									onChangeText={setGuardianName}
+								/>
+							</View>
+							<View style={styles.field}>
+								<Text style={styles.label}>Guardian Mobile *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="Enter guardian's mobile"
+									value={guardianMobile}
+									onChangeText={setGuardianMobile}
+									keyboardType="phone-pad"
+								/>
+							</View>
+							<View style={styles.field}>
+								<Text style={styles.label}>Guardian Relationship *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="e.g., Parent, Sibling"
+									value={guardianRelation}
+									onChangeText={setGuardianRelation}
 								/>
 							</View>
 							{/* Preferred Location */}
@@ -318,6 +395,17 @@ const styles = StyleSheet.create({
 		backgroundColor: "#CCCCCC",
 	},
 	buttonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "bold" },
+	imagePickerButton: {
+		backgroundColor: "#F5F5F5",
+		borderColor: "#D3D3D3",
+		borderRadius: 8,
+		borderWidth: 1,
+		paddingVertical: 12,
+		alignItems: "center",
+		marginTop: 5,
+	},
+	imagePickerText: { color: "#36454F", fontSize: 13 },
+	imageUploadedText: { color: "green", fontSize: 12, marginTop: 5, alignSelf: 'center' },
 	view2: { paddingTop: 15, paddingBottom: 16 },
 	text2: { color: "#FFA500", fontSize: 20, fontWeight: "bold" },
 	backText: { color: "#FFA500", fontSize: 13, textDecorationLine: 'underline' },
