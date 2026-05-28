@@ -19,6 +19,8 @@ const StudentRegistration = ({ navigation }) => {
 	const [location, setLocation] = useState('');
 	const [budget, setBudget] = useState('');
 	const [accommodation, setAccommodation] = useState('room');
+	const [genderPreference, setGenderPreference] = useState('any');
+	const [maxDistance, setMaxDistance] = useState('');
 	const [idCardImage, setIdCardImage] = useState(null);
 	const [guardianName, setGuardianName] = useState('');
 	const [guardianMobile, setGuardianMobile] = useState('');
@@ -130,6 +132,8 @@ const StudentRegistration = ({ navigation }) => {
 				preferredLocation: location,
 				budgetRange: budget,
 				accommodationType: accommodation,
+				genderPreference,
+				maxDistance,
 				status: 'Pending Verification',
 				createdAt: new Date().toISOString(),
 			};
@@ -292,6 +296,32 @@ const StudentRegistration = ({ navigation }) => {
 									placeholder="e.g., 5000-10000 LKR"
 									value={budget}
 									onChangeText={setBudget}
+									keyboardType="numeric"
+								/>
+							</View>
+							{/* Gender Preference */}
+							<View style={styles.field}>
+								<Text style={styles.label}>Gender-based Boarding *</Text>
+								<SelectPicker
+									selectedValue={genderPreference}
+									onValueChange={setGenderPreference}
+									items={[
+										{ label: 'Any', value: 'any' },
+										{ label: 'Male Only', value: 'male_only' },
+										{ label: 'Female Only', value: 'female_only' },
+									]}
+									style={styles.picker}
+									containerStyle={styles.pickerContainer}
+								/>
+							</View>
+							{/* Max Distance */}
+							<View style={styles.field}>
+								<Text style={styles.label}>Max Distance to University (km) *</Text>
+								<TextInput
+									style={styles.input}
+									placeholder="e.g., 5"
+									value={maxDistance}
+									onChangeText={setMaxDistance}
 									keyboardType="numeric"
 								/>
 							</View>

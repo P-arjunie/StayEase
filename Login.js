@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginWithEmail, getUserProfile } from './config/firebase';
+import { getAuth, signOut } from 'firebase/auth';
 import { handleError } from './utils/errorHandler';
+
+const auth = getAuth();
 
 const Login = ({ navigation }) => {
 	const [email, setEmail] = useState('');
@@ -18,6 +21,12 @@ const Login = ({ navigation }) => {
 			const profile = await getUserProfile(user.uid);
 			
 			if (profile && profile.role) {
+				if (profile.status === 'Pending Verification' || profile.status === 'Pending Admin Approval') {
+					Alert.alert('Account Pending', 'Your account is pending verification by the admin. Please wait for approval.');
+					await signOut(auth); // ensure they don't stay logged in behind the scenes
+					return;
+				}
+
 				if (profile.role === 'landlord') {
 					navigation.navigate('LandlordDashboard');
 				} else if (profile.role === 'student') {
