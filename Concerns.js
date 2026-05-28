@@ -52,8 +52,23 @@ const Concerns = ({ navigation }) => {
 
 		try {
 			setSubmitting(true);
+
+			// Find the student's approved booking to get landlordId and propertyId
+			const bq = query(collection(db, 'bookings'), where('studentId', '==', currentUserId), where('status', '==', 'approved'));
+			const bSnap = await getDocs(bq);
+			let landlordId = 'unknown';
+			let propertyId = 'unknown';
+			
+			if (!bSnap.empty) {
+				const bookingData = bSnap.docs[0].data();
+				landlordId = bookingData.landlordId;
+				propertyId = bookingData.propertyId;
+			}
+
 			await addDoc(collection(db, 'concerns'), {
 				studentId: currentUserId,
+				landlordId,
+				propertyId,
 				type,
 				title,
 				description,

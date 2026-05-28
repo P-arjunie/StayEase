@@ -1,0 +1,153 @@
+import React, { useState, useEffect } from "react";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { auth, db } from "./config/firebase";
+
+const LandlordPayments = ({ navigation }) => {
+	const [payments, setPayments] = useState([]);
+	const [loading, setLoading] = useState(true);
+
+	const currentUserId = auth.currentUser?.uid;
+
+	useEffect(() => {
+		loadPayments();
+	}, []);
+
+	const loadPayments = async () => {
+		if (!currentUserId) return;
+		try {
+			setLoading(true);
+			const q = query(collection(db, 'payments'), where('landlordId', '==', currentUserId));
+			const snapshot = await getDocs(q);
+			
+			const paymentsList = [];
+			snapshot.forEach(doc => {
+				paymentsList.push({ id: doc.id, ...doc.data() });
+			});
+			// Sort by date descending
+			paymentsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+			setPayments(paymentsList);
+		} catch (error) {
+			console.error("Error loading payments:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleVerify = async (paymentId) => {
+		try {
+			const reqRef = doc(db, 'payments', paymentId);
+			await updateDoc(reqRef, { status: 'verified' });
+			
+			Alert.alert('Success', 'Payment verified successfully.');
+			loadPayments();
+		} catch (error) {
+			Alert.alert('Error', 'Failed to verify payment.');
+			console.error(error);
+		}
+	};
+
+	return (
+		<SafeAreaView style={styles.container}>
+			<View style={styles.header}>
+				<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+					<Text style={styles.backButtonText}>← Back</Text>
+				</TouchableOpacity>
+				<Text style={styles.headerTitle}>Tenant Payments</Text>
+			</View>
+
+			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+				{loading ? (
+					<View style={styles.centerContainer}>
+						<ActivityIndicator size="large" color="#FFA500" />
+						<Text style={styles.loadingText}>Loading payments...</Text>
+					</View>
+				) : payments.length === 0 ? (
+					<Text style={styles.emptyText}>No payments received yet.</Text>
+				) : (
+					payments.map(payment => (
+						<View key={payment.id} style={styles.card}>
+							<View style={styles.cardHeader}>
+								<Text style={styles.paymentType}>
+									{payment.type === 'rent' ? '🏠 Rent' : payment.type === 'deposit' ? '💰 Deposit' : '⚡ Utility'}
+								</Text>
+								<View style={[styles.statusBadge, payment.status === 'verified' ? styles.statusVerified : styles.statusPending]}>
+									<Text style={styles.statusText}>{payment.status.toUpperCase()}</Text>
+								</View>
+							</View>
+							
+							<Text style={styles.amount}>Rs {payment.amount?.toLocaleString()}</Text>
+							<Text style={styles.reference}>Ref: {payment.reference}</Text>
+							<Text style={styles.date}>Submitted: {new Date(payment.createdAt).toLocaleDateString()}</Text>
+
+							{payment.proofImage && (
+								<View style={styles.proofContainer}>
+									<Text style={styles.proofLabel}>Payment Proof:</Text>
+									<Image 
+										source={{ uri: payment.proofImage }} 
+										style={styles.proofImage} 
+										resizeMode="cover"
+									/>
+								</View>
+							)}
+
+							{payment.status === 'pending' && (
+								<TouchableOpacity 
+									style={styles.verifyButton} 
+									onPress={() => handleVerify(payment.id)}
+								>
+									<Text style={styles.verifyButtonText}>✓ Verify Payment</Text>
+								</TouchableOpacity>
+							)}
+						</View>
+					))
+				)}
+			</ScrollView>
+		</SafeAreaView>
+	);
+};
+
+const styles = StyleSheet.create({
+	container: { flex: 1, backgroundColor: '#F8F9FA' },
+	header: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: '#FFFFFF' },
+	backButton: { paddingRight: 15 },
+	backButtonText: { color: '#FFA500', fontSize: 16, fontWeight: 'bold' },
+	headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#36454F' },
+	scrollView: { flex: 1, padding: 20 },
+	centerContainer: { paddingVertical: 40, alignItems: 'center' },
+	loadingText: { marginTop: 10, color: '#757575' },
+	emptyText: { color: '#757575', fontStyle: 'italic', textAlign: 'center', marginTop: 40 },
+	card: {
+		backgroundColor: '#FFFFFF',
+		padding: 16,
+		borderRadius: 12,
+		marginBottom: 15,
+		shadowColor: '#000',
+		shadowOpacity: 0.05,
+		shadowOffset: { width: 0, height: 2 },
+		shadowRadius: 8,
+		elevation: 2,
+	},
+	cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+	paymentType: { fontSize: 16, fontWeight: 'bold', color: '#36454F' },
+	statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+	statusVerified: { backgroundColor: '#E8F5E9' },
+	statusPending: { backgroundColor: '#FFF3E0' },
+	statusText: { fontSize: 11, fontWeight: 'bold', color: '#36454F' },
+	amount: { fontSize: 24, fontWeight: 'bold', color: '#FFA500', marginBottom: 4 },
+	reference: { fontSize: 14, color: '#36454F', marginBottom: 4 },
+	date: { fontSize: 12, color: '#757575', marginBottom: 12 },
+	proofContainer: { marginTop: 10, marginBottom: 16 },
+	proofLabel: { fontSize: 13, color: '#757575', marginBottom: 6 },
+	proofImage: { width: '100%', height: 150, borderRadius: 8, backgroundColor: '#E0E0E0' },
+	verifyButton: {
+		backgroundColor: '#4CAF50',
+		paddingVertical: 12,
+		borderRadius: 8,
+		alignItems: 'center',
+	},
+	verifyButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' },
+});
+
+export default LandlordPayments;

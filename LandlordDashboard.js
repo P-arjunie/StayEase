@@ -84,14 +84,20 @@ const LandlordDashboard = ({ navigation }) => {
 						<Text style={styles.statNumber}>{stats.pendingVisits}</Text>
 						<Text style={styles.statLabel}>Pending Visits</Text>
 					</TouchableOpacity>
-					<View style={styles.statCard}>
+					<TouchableOpacity 
+						style={styles.statCard} 
+						onPress={() => navigation.navigate('LandlordConcerns')}
+					>
 						<Text style={styles.statNumber}>{stats.unresolvedIssues}</Text>
 						<Text style={styles.statLabel}>Unresolved Issues</Text>
-					</View>
-					<View style={styles.statCard}>
-						<Text style={styles.statNumber}>{stats.totalTenants}</Text>
-						<Text style={styles.statLabel}>Total Tenants</Text>
-					</View>
+					</TouchableOpacity>
+					<TouchableOpacity 
+						style={styles.statCard} 
+						onPress={() => navigation.navigate('LandlordPayments')}
+					>
+						<Text style={styles.statNumber}>💳</Text>
+						<Text style={styles.statLabel}>View Payments</Text>
+					</TouchableOpacity>
 				</View>
 
 				{/* Add Property Button */}
