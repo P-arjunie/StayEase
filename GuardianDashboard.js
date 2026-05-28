@@ -45,7 +45,7 @@ const GuardianDashboard = ({ navigation }) => {
 				if (!sSnap.empty) {
 					const sData = { id: sSnap.docs[0].id, ...sSnap.docs[0].data() };
 					setStudent(sData);
-					setOverrideBudget(sData.budgetRange || '');
+					setOverrideBudget(sData.maxBudget ? String(sData.maxBudget) : '');
 					setOverrideGender(sData.genderPreference || 'any');
 				}
 			}
@@ -62,7 +62,7 @@ const GuardianDashboard = ({ navigation }) => {
 			setUpdating(true);
 			const studentRef = doc(db, 'users', student.id);
 			await updateDoc(studentRef, {
-				budgetRange: overrideBudget,
+				maxBudget: parseInt(overrideBudget) || 0,
 				genderPreference: overrideGender,
 				guardianOverridden: true // flag to indicate rules are locked by guardian
 			});
@@ -133,13 +133,20 @@ const GuardianDashboard = ({ navigation }) => {
 								As a guardian, you can override and lock the student's preferences for safety and budget.
 							</Text>
 
+							<View style={styles.marketHintBox}>
+								<Text style={styles.marketHintIcon}>💡</Text>
+								<Text style={styles.marketHintText}>
+									Market Context: Average boarding house rent near most state universities ranges from Rs 10,000 to Rs 25,000 per month.
+								</Text>
+							</View>
+
 							<View style={styles.field}>
-								<Text style={styles.label}>Maximum Budget Range (Rs)</Text>
+								<Text style={styles.label}>Maximum Budget Limit (Rs)</Text>
 								<TextInput
 									style={styles.input}
 									value={overrideBudget}
 									onChangeText={setOverrideBudget}
-									placeholder="e.g. 10000"
+									placeholder="e.g. 15000"
 									keyboardType="numeric"
 								/>
 							</View>
@@ -267,6 +274,16 @@ const styles = StyleSheet.create({
 	helperText: { fontSize: 13, color: '#757575', marginBottom: 20, lineHeight: 20 },
 	field: { marginBottom: 15 },
 	label: { fontSize: 14, fontWeight: '600', color: '#36454F', marginBottom: 8 },
+	marketHintBox: {
+		flexDirection: 'row',
+		backgroundColor: '#E3F2FD',
+		padding: 12,
+		borderRadius: 8,
+		marginBottom: 16,
+		alignItems: 'center',
+	},
+	marketHintIcon: { fontSize: 18, marginRight: 8 },
+	marketHintText: { fontSize: 12, color: '#1565C0', flex: 1, lineHeight: 18 },
 	input: {
 		backgroundColor: '#F5F7FA',
 		borderColor: '#E0E0E0',

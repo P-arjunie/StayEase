@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, Switch } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { updateProperty } from "./config/firebase";
 import { handleError } from "./utils/errorHandler";
@@ -17,6 +17,7 @@ const EditProperty = ({ navigation, route }) => {
 	const [totalTenants, setTotalTenants] = useState(String(property.totalTenants || ''));
 	const [availableTenants, setAvailableTenants] = useState(String(property.availableTenants || ''));
 	const [description, setDescription] = useState(property.description);
+	const [isActive, setIsActive] = useState(property.status === 'active');
 	const [loading, setLoading] = useState(false);
 
 	const handleSave = async () => {
@@ -45,6 +46,7 @@ const EditProperty = ({ navigation, route }) => {
 				totalTenants: total,
 				availableTenants: available,
 				description,
+				status: isActive ? 'active' : 'inactive',
 				updatedAt: new Date().toISOString(),
 			});
 			Alert.alert('Success', 'Property updated successfully!');
@@ -181,6 +183,25 @@ const EditProperty = ({ navigation, route }) => {
 						/>
 					</View>
 
+					{/* Status Toggle */}
+					<View style={styles.inputGroup}>
+						<View style={styles.toggleContainer}>
+							<View>
+								<Text style={styles.label}>Listing Status</Text>
+								<Text style={styles.toggleSubtext}>
+									{isActive ? 'Property is visible to students' : 'Property is hidden from searches'}
+								</Text>
+							</View>
+							<Switch
+								trackColor={{ false: "#767577", true: "#FFA500" }}
+								thumbColor={isActive ? "#FFFFFF" : "#f4f3f4"}
+								ios_backgroundColor="#3e3e3e"
+								onValueChange={setIsActive}
+								value={isActive}
+							/>
+						</View>
+					</View>
+
 					{/* Action Buttons */}
 					<View style={styles.actionContainer}>
 						<TouchableOpacity
@@ -307,6 +328,21 @@ const styles = StyleSheet.create({
 		color: '#FFA500',
 		fontSize: 14,
 		fontWeight: '700',
+	},
+	toggleContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		backgroundColor: '#F5F7FA',
+		padding: 14,
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: '#E0E0E0',
+	},
+	toggleSubtext: {
+		fontSize: 12,
+		color: '#757575',
+		marginTop: 4,
 	},
 });
 

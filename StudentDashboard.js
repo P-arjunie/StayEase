@@ -1,15 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { auth, getUserProfile } from "./config/firebase";
 
 const StudentDashboard = ({ navigation }) => {
+	const [userProfile, setUserProfile] = useState(null);
+
+	useEffect(() => {
+		const fetchProfile = async () => {
+			if (auth.currentUser) {
+				const profile = await getUserProfile(auth.currentUser.uid);
+				setUserProfile(profile);
+			}
+		};
+		fetchProfile();
+	}, []);
 	return (
 		<SafeAreaView style={styles.container}>
 			<ScrollView style={styles.scrollView}>
 				<View style={styles.column}>
 					<View style={styles.view}>
 						<Text style={styles.text}>
-							{"Student Dashboard"}
+							{userProfile ? `Welcome, ${userProfile.fullName.split(' ')[0]}` : "Student Dashboard"}
 						</Text>
 					</View>
 					<View style={styles.view2}>
@@ -18,6 +30,18 @@ const StudentDashboard = ({ navigation }) => {
 						</Text>
 					</View>
 				</View>
+
+				{userProfile?.guardianOverridden && (
+					<View style={styles.guardianAlert}>
+						<Text style={styles.guardianAlertIcon}>🛡️</Text>
+						<View style={styles.guardianAlertTextContainer}>
+							<Text style={styles.guardianAlertTitle}>Guardian Linked & Active</Text>
+							<Text style={styles.guardianAlertText}>
+								Your guardian has locked your search rules for safety. Properties violating these rules are hidden.
+							</Text>
+						</View>
+					</View>
+				)}
 
 				<View style={styles.column2}>
 					<View style={styles.row}>
@@ -140,6 +164,35 @@ const styles = StyleSheet.create({
 	column2: {
 		marginBottom: 36,
 		marginHorizontal: 20,
+	},
+	guardianAlert: {
+		flexDirection: 'row',
+		backgroundColor: '#E8F5E9',
+		borderColor: '#2E7D32',
+		borderWidth: 1,
+		borderRadius: 12,
+		padding: 15,
+		marginHorizontal: 20,
+		marginBottom: 20,
+		alignItems: 'center',
+	},
+	guardianAlertIcon: {
+		fontSize: 24,
+		marginRight: 10,
+	},
+	guardianAlertTextContainer: {
+		flex: 1,
+	},
+	guardianAlertTitle: {
+		fontSize: 14,
+		fontWeight: 'bold',
+		color: '#2E7D32',
+		marginBottom: 2,
+	},
+	guardianAlertText: {
+		fontSize: 12,
+		color: '#1B5E20',
+		lineHeight: 16,
 	},
 	column3: {
 		flex: 1,

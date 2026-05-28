@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, limit, startAfter, orderBy } from 'firebase/firestore';
 import { auth, db } from "./config/firebase";
 
 const LandlordConcerns = ({ navigation }) => {
 	const [concerns, setConcerns] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [loadingMore, setLoadingMore] = useState(false);
+	const [lastVisible, setLastVisible] = useState(null);
+	const [hasMore, setHasMore] = useState(true);
+	const PAGE_SIZE = 10;
 
 	const currentUserId = auth.currentUser?.uid;
 
@@ -18,20 +22,64 @@ const LandlordConcerns = ({ navigation }) => {
 		if (!currentUserId) return;
 		try {
 			setLoading(true);
-			const q = query(collection(db, 'concerns'), where('landlordId', '==', currentUserId));
+			const q = query(
+				collection(db, 'concerns'), 
+				where('landlordId', '==', currentUserId),
+				orderBy('createdAt', 'desc'),
+				limit(PAGE_SIZE)
+			);
 			const snapshot = await getDocs(q);
 			
 			const concernsList = [];
 			snapshot.forEach(doc => {
 				concernsList.push({ id: doc.id, ...doc.data() });
 			});
-			// Sort by date descending
-			concernsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+			
+			if (snapshot.docs.length > 0) {
+				setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+			}
+			if (snapshot.docs.length < PAGE_SIZE) {
+				setHasMore(false);
+			}
+
 			setConcerns(concernsList);
 		} catch (error) {
 			console.error("Error loading concerns:", error);
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const loadMoreConcerns = async () => {
+		if (!currentUserId || !lastVisible || loadingMore || !hasMore) return;
+		try {
+			setLoadingMore(true);
+			const q = query(
+				collection(db, 'concerns'), 
+				where('landlordId', '==', currentUserId),
+				orderBy('createdAt', 'desc'),
+				startAfter(lastVisible),
+				limit(PAGE_SIZE)
+			);
+			const snapshot = await getDocs(q);
+			
+			const concernsList = [];
+			snapshot.forEach(doc => {
+				concernsList.push({ id: doc.id, ...doc.data() });
+			});
+			
+			if (snapshot.docs.length > 0) {
+				setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+			}
+			if (snapshot.docs.length < PAGE_SIZE) {
+				setHasMore(false);
+			}
+
+			setConcerns(prev => [...prev, ...concernsList]);
+		} catch (error) {
+			console.error("Error loading more concerns:", error);
+		} finally {
+			setLoadingMore(false);
 		}
 	};
 
@@ -84,28 +132,50 @@ const LandlordConcerns = ({ navigation }) => {
 							
 							<Text style={styles.title}>{concern.title}</Text>
 							<Text style={styles.description}>{concern.description}</Text>
-							<Text style={styles.date}>Reported: {new Date(concern.createdAt).toLocaleDateString()}</Text>
-
-							{concern.status !== 'resolved' && (
-								<View style={styles.actionsRow}>
-									{concern.status === 'pending' && (
-										<TouchableOpacity 
-											style={styles.progressButton} 
-											onPress={() => handleUpdateStatus(concern.id, 'in-progress')}
-										>
-											<Text style={styles.progressButtonText}>Mark In-Progress</Text>
-										</TouchableOpacity>
-									)}
-									<TouchableOpacity 
-										style={styles.resolveButton} 
-										onPress={() => handleUpdateStatus(concern.id, 'resolved')}
-									>
-										<Text style={styles.resolveButtonText}>Mark Resolved</Text>
-									</TouchableOpacity>
+							{concern.image && (
+								<View style={styles.imageContainer}>
+									<Image 
+										source={{ uri: concern.image }} 
+										style={styles.concernImage} 
+										resizeMode="cover"
+									/>
 								</View>
 							)}
+
+							<View style={styles.actionContainer}>
+								{concern.status !== 'resolved' && (
+									<TouchableOpacity 
+										style={[styles.actionButton, styles.resolveButton]} 
+										onPress={() => handleUpdateStatus(concern.id, 'resolved')}
+									>
+										<Text style={styles.actionButtonText}>Mark Resolved</Text>
+									</TouchableOpacity>
+								)}
+								{concern.status === 'pending' && (
+									<TouchableOpacity 
+										style={[styles.actionButton, styles.progressButton]} 
+										onPress={() => handleUpdateStatus(concern.id, 'in-progress')}
+									>
+										<Text style={styles.actionButtonText}>Mark In-Progress</Text>
+									</TouchableOpacity>
+								)}
+							</View>
 						</View>
 					))
+				)}
+
+				{!loading && hasMore && concerns.length > 0 && (
+					<TouchableOpacity 
+						style={styles.loadMoreButton} 
+						onPress={loadMoreConcerns}
+						disabled={loadingMore}
+					>
+						{loadingMore ? (
+							<ActivityIndicator size="small" color="#FFA500" />
+						) : (
+							<Text style={styles.loadMoreText}>Load More</Text>
+						)}
+					</TouchableOpacity>
 				)}
 			</ScrollView>
 		</SafeAreaView>
@@ -144,24 +214,32 @@ const styles = StyleSheet.create({
 	statusText: { fontSize: 10, fontWeight: 'bold', color: '#36454F' },
 	title: { fontSize: 18, fontWeight: 'bold', color: '#E74C3C', marginBottom: 8 },
 	description: { fontSize: 14, color: '#555', marginBottom: 12, lineHeight: 20 },
-	date: { fontSize: 12, color: '#999', marginBottom: 16 },
-	actionsRow: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: '#E0E0E0', paddingTop: 16 },
-	progressButton: {
+	imageContainer: { marginBottom: 12, borderRadius: 8, overflow: 'hidden' },
+	concernImage: { width: '100%', height: 200 },
+	actionContainer: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: '#E0E0E0', paddingTop: 16 },
+	actionButton: {
 		flex: 1,
-		backgroundColor: '#2196F3',
 		paddingVertical: 10,
 		borderRadius: 6,
 		alignItems: 'center',
 	},
-	progressButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold' },
-	resolveButton: {
-		flex: 1,
-		backgroundColor: '#4CAF50',
-		paddingVertical: 10,
-		borderRadius: 6,
+	actionButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold' },
+	resolveButton: { backgroundColor: '#4CAF50' },
+	progressButton: { backgroundColor: '#FFA500' },
+	loadMoreButton: {
+		paddingVertical: 14,
 		alignItems: 'center',
+		backgroundColor: '#FFFFFF',
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: '#FFA500',
+		marginVertical: 20,
 	},
-	resolveButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold' },
+	loadMoreText: {
+		color: '#FFA500',
+		fontSize: 14,
+		fontWeight: 'bold',
+	},
 });
 
 export default LandlordConcerns;

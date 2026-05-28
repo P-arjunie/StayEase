@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from "./config/firebase";
 
 const LandlordRequests = ({ navigation }) => {
@@ -24,9 +24,23 @@ const LandlordRequests = ({ navigation }) => {
 			const snapshot = await getDocs(q);
 			
 			const requestsList = [];
-			snapshot.forEach(doc => {
-				requestsList.push({ id: doc.id, ...doc.data() });
-			});
+			for (const document of snapshot.docs) {
+				const reqData = document.data();
+				let studentMobile = null;
+				let studentName = null;
+				if (reqData.studentId) {
+					try {
+						const studentDoc = await getDoc(doc(db, 'users', reqData.studentId));
+						if (studentDoc.exists()) {
+							studentMobile = studentDoc.data().mobile;
+							studentName = studentDoc.data().fullName;
+						}
+					} catch (err) {
+						console.error("Error fetching student details", err);
+					}
+				}
+				requestsList.push({ id: document.id, ...reqData, studentMobile, studentName });
+			}
 			// Sort by date descending
 			requestsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 			setRequests(requestsList);
@@ -135,6 +149,15 @@ const LandlordRequests = ({ navigation }) => {
 									</TouchableOpacity>
 								</View>
 							)}
+
+							{req.studentMobile && (
+								<TouchableOpacity 
+									style={styles.callButton} 
+									onPress={() => Linking.openURL(`tel:${req.studentMobile}`)}
+								>
+									<Text style={styles.callButtonText}>📞 Call Student ({req.studentName || 'Student'})</Text>
+								</TouchableOpacity>
+							)}
 						</View>
 					))
 				)}
@@ -195,6 +218,16 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	rejectButtonText: { color: '#F44336', fontSize: 13, fontWeight: 'bold' },
+	callButton: {
+		backgroundColor: '#F5F7FA',
+		borderColor: '#E0E0E0',
+		borderWidth: 1,
+		paddingVertical: 10,
+		borderRadius: 6,
+		alignItems: 'center',
+		marginTop: 10,
+	},
+	callButtonText: { color: '#36454F', fontSize: 13, fontWeight: 'bold' },
 });
 
 export default LandlordRequests;

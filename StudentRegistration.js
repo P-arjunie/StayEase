@@ -17,7 +17,9 @@ const StudentRegistration = ({ navigation }) => {
 	const [faculty, setFaculty] = useState('');
 	const [studentId, setStudentId] = useState('');
 	const [location, setLocation] = useState('');
-	const [budget, setBudget] = useState('');
+	const [minBudget, setMinBudget] = useState('');
+	const [maxBudget, setMaxBudget] = useState('');
+	const [accommodation, setAccommodation] = useState('room');
 	const [accommodation, setAccommodation] = useState('room');
 	const [genderPreference, setGenderPreference] = useState('any');
 	const [maxDistance, setMaxDistance] = useState('');
@@ -27,6 +29,7 @@ const StudentRegistration = ({ navigation }) => {
 	const [guardianRelation, setGuardianRelation] = useState('');
 	const [termsAccepted, setTermsAccepted] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [step, setStep] = useState(1);
 
 	const pickImage = async () => {
 		let result = await ImagePicker.launchImageLibraryAsync({
@@ -112,6 +115,14 @@ const StudentRegistration = ({ navigation }) => {
 			return;
 		}
 
+		const parsedMinBudget = parseInt(minBudget) || 0;
+		const parsedMaxBudget = parseInt(maxBudget) || 0;
+
+		if (parsedMinBudget > parsedMaxBudget) {
+			Alert.alert('Invalid Budget', 'Min budget cannot be greater than Max budget');
+			return;
+		}
+
 		try {
 			setLoading(true);
 			const user = await registerWithEmail(email, password);
@@ -130,7 +141,8 @@ const StudentRegistration = ({ navigation }) => {
 					relationship: guardianRelation,
 				},
 				preferredLocation: location,
-				budgetRange: budget,
+				minBudget: parsedMinBudget,
+				maxBudget: parsedMaxBudget,
 				accommodationType: accommodation,
 				genderPreference,
 				maxDistance,
@@ -153,10 +165,19 @@ const StudentRegistration = ({ navigation }) => {
 			<ScrollView style={styles.scrollView}>
 				<View style={styles.column}>
 					<View style={styles.view2}>
-						<Text style={styles.text2}>{"StayEase - Student Registration"}</Text>
+						<Text style={styles.text2}>{"StayEase Registration"}</Text>
+						<Text style={styles.stepText}>Step {step} of 3</Text>
 					</View>
+					
+					{/* Progress Bar */}
+					<View style={styles.progressBarContainer}>
+						<View style={[styles.progressBarFilled, { width: `${(step / 3) * 100}%` }]} />
+					</View>
+
 					<View style={styles.column2}>
 						<View style={styles.column3}>
+							{/* Step 1: Account Details */}
+							{step === 1 && (<>
 							{/* Full Name */}
 							<View style={styles.field}>
 								<Text style={styles.label}>Full Name *</Text>
@@ -200,17 +221,16 @@ const StudentRegistration = ({ navigation }) => {
 									secureTextEntry
 								/>
 							</View>
-							{/* Confirm Password */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Confirm Password *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="Confirm your password"
-									value={confirmPassword}
-									onChangeText={setConfirmPassword}
-									secureTextEntry
-								/>
+							
+							<View style={styles.wizardNav}>
+								<TouchableOpacity style={styles.nextButton} onPress={() => setStep(2)}>
+									<Text style={styles.buttonText}>Next →</Text>
+								</TouchableOpacity>
 							</View>
+							</>)}
+
+							{/* Step 2: University Details */}
+							{step === 2 && (<>
 							{/* University */}
 							<View style={styles.field}>
 								<Text style={styles.label}>University Name *</Text>
@@ -249,6 +269,19 @@ const StudentRegistration = ({ navigation }) => {
 								</TouchableOpacity>
 								{idCardImage && <Text style={styles.imageUploadedText}>Image selected</Text>}
 							</View>
+							
+							<View style={styles.wizardNav}>
+								<TouchableOpacity style={styles.nextButton} onPress={() => setStep(3)}>
+									<Text style={styles.buttonText}>Next →</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={styles.prevButton} onPress={() => setStep(1)}>
+									<Text style={styles.prevButtonText}>← Back</Text>
+								</TouchableOpacity>
+							</View>
+							</>)}
+
+							{/* Step 3: Preferences & Guardian */}
+							{step === 3 && (<>
 							{/* Guardian Details */}
 							<View style={styles.field}>
 								<Text style={styles.label}>Guardian Name *</Text>
@@ -289,15 +322,27 @@ const StudentRegistration = ({ navigation }) => {
 								/>
 							</View>
 							{/* Budget Range */}
-							<View style={styles.field}>
-								<Text style={styles.label}>Budget Range *</Text>
-								<TextInput
-									style={styles.input}
-									placeholder="e.g., 5000-10000 LKR"
-									value={budget}
-									onChangeText={setBudget}
-									keyboardType="numeric"
-								/>
+							<View style={styles.rowContainer}>
+								<View style={styles.halfInput}>
+									<Text style={styles.label}>Min Budget (Rs) *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="e.g., 5000"
+										value={minBudget}
+										onChangeText={setMinBudget}
+										keyboardType="numeric"
+									/>
+								</View>
+								<View style={styles.halfInput}>
+									<Text style={styles.label}>Max Budget (Rs) *</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="e.g., 15000"
+										value={maxBudget}
+										onChangeText={setMaxBudget}
+										keyboardType="numeric"
+									/>
+								</View>
 							</View>
 							{/* Gender Preference */}
 							<View style={styles.field}>
@@ -348,9 +393,15 @@ const StudentRegistration = ({ navigation }) => {
 								<Text style={styles.checkboxText}> I accept the Terms & Conditions *</Text>
 							</TouchableOpacity>
 							{/* Register Button */}
-							<TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleRegister} disabled={loading}>
-								<Text style={styles.buttonText}>{loading ? 'Registering...' : 'Register as Student'}</Text>
-							</TouchableOpacity>
+							<View style={styles.wizardNav}>
+								<TouchableOpacity style={[styles.button, loading && styles.buttonDisabled, { flex: 1 }]} onPress={handleRegister} disabled={loading}>
+									<Text style={styles.buttonText}>{loading ? 'Registering...' : 'Complete Registration'}</Text>
+								</TouchableOpacity>
+								<TouchableOpacity style={styles.prevButton} onPress={() => setStep(2)}>
+									<Text style={styles.prevButtonText}>← Back</Text>
+								</TouchableOpacity>
+							</View>
+							</>)}
 						</View>
 						<TouchableOpacity onPress={() => navigation.goBack()}>
 							<Text style={styles.backText}>Back to Login</Text>
@@ -438,6 +489,43 @@ const styles = StyleSheet.create({
 	imageUploadedText: { color: "green", fontSize: 12, marginTop: 5, alignSelf: 'center' },
 	view2: { paddingTop: 15, paddingBottom: 16 },
 	text2: { color: "#FFA500", fontSize: 20, fontWeight: "bold" },
+	stepText: { color: "#757575", fontSize: 14, marginTop: 4 },
+	progressBarContainer: {
+		height: 6,
+		backgroundColor: '#E0E0E0',
+		borderRadius: 3,
+		marginHorizontal: 26,
+		marginBottom: 10,
+	},
+	progressBarFilled: {
+		height: '100%',
+		backgroundColor: '#FFA500',
+		borderRadius: 3,
+	},
+	wizardNav: {
+		paddingHorizontal: 26,
+		marginBottom: 10,
+		flexDirection: 'row',
+		gap: 10,
+	},
+	nextButton: {
+		flex: 1,
+		alignItems: "center",
+		backgroundColor: "#FFA500",
+		borderRadius: 8,
+		paddingVertical: 12,
+	},
+	prevButton: {
+		alignItems: "center",
+		backgroundColor: "#FFFFFF",
+		borderColor: "#D3D3D3",
+		borderWidth: 1,
+		borderRadius: 8,
+		paddingVertical: 12,
+	},
+	prevButtonText: { color: "#36454F", fontSize: 14, fontWeight: "bold" },
+	rowContainer: { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 26, marginBottom: 19 },
+	halfInput: { flex: 1, marginHorizontal: 5 },
 	backText: { color: "#FFA500", fontSize: 13, textDecorationLine: 'underline' },
 });
 

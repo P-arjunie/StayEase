@@ -70,10 +70,11 @@ const BrowseProperties = ({ navigation }) => {
 				
 				let isCompliant = true;
 				if (userProfile && userProfile.role === 'student') {
-					if (userProfile.budgetRange && p.monthlyRent) {
-						const parts = userProfile.budgetRange.toString().split('-');
-						const maxBudget = parts.length === 2 ? parseInt(parts[1], 10) : parseInt(parts[0], 10);
-						if (!isNaN(maxBudget) && p.monthlyRent > maxBudget) {
+					if (p.monthlyRent) {
+						if (userProfile.minBudget && p.monthlyRent < userProfile.minBudget) {
+							isCompliant = false;
+						}
+						if (userProfile.maxBudget && p.monthlyRent > userProfile.maxBudget) {
 							isCompliant = false;
 						}
 					}

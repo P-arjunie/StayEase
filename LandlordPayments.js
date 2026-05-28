@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, limit, startAfter, orderBy } from 'firebase/firestore';
 import { auth, db } from "./config/firebase";
 
 const LandlordPayments = ({ navigation }) => {
 	const [payments, setPayments] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [loadingMore, setLoadingMore] = useState(false);
+	const [lastVisible, setLastVisible] = useState(null);
+	const [hasMore, setHasMore] = useState(true);
+	const PAGE_SIZE = 10;
 
 	const currentUserId = auth.currentUser?.uid;
 
@@ -18,20 +22,64 @@ const LandlordPayments = ({ navigation }) => {
 		if (!currentUserId) return;
 		try {
 			setLoading(true);
-			const q = query(collection(db, 'payments'), where('landlordId', '==', currentUserId));
+			const q = query(
+				collection(db, 'payments'), 
+				where('landlordId', '==', currentUserId),
+				orderBy('createdAt', 'desc'),
+				limit(PAGE_SIZE)
+			);
 			const snapshot = await getDocs(q);
 			
 			const paymentsList = [];
 			snapshot.forEach(doc => {
 				paymentsList.push({ id: doc.id, ...doc.data() });
 			});
-			// Sort by date descending
-			paymentsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+			
+			if (snapshot.docs.length > 0) {
+				setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+			}
+			if (snapshot.docs.length < PAGE_SIZE) {
+				setHasMore(false);
+			}
+			
 			setPayments(paymentsList);
 		} catch (error) {
 			console.error("Error loading payments:", error);
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const loadMorePayments = async () => {
+		if (!currentUserId || !lastVisible || loadingMore || !hasMore) return;
+		try {
+			setLoadingMore(true);
+			const q = query(
+				collection(db, 'payments'), 
+				where('landlordId', '==', currentUserId),
+				orderBy('createdAt', 'desc'),
+				startAfter(lastVisible),
+				limit(PAGE_SIZE)
+			);
+			const snapshot = await getDocs(q);
+			
+			const paymentsList = [];
+			snapshot.forEach(doc => {
+				paymentsList.push({ id: doc.id, ...doc.data() });
+			});
+			
+			if (snapshot.docs.length > 0) {
+				setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+			}
+			if (snapshot.docs.length < PAGE_SIZE) {
+				setHasMore(false);
+			}
+			
+			setPayments(prev => [...prev, ...paymentsList]);
+		} catch (error) {
+			console.error("Error loading more payments:", error);
+		} finally {
+			setLoadingMore(false);
 		}
 	};
 
@@ -103,6 +151,20 @@ const LandlordPayments = ({ navigation }) => {
 						</View>
 					))
 				)}
+
+				{!loading && hasMore && payments.length > 0 && (
+					<TouchableOpacity 
+						style={styles.loadMoreButton} 
+						onPress={loadMorePayments}
+						disabled={loadingMore}
+					>
+						{loadingMore ? (
+							<ActivityIndicator size="small" color="#FFA500" />
+						) : (
+							<Text style={styles.loadMoreText}>Load More</Text>
+						)}
+					</TouchableOpacity>
+				)}
 			</ScrollView>
 		</SafeAreaView>
 	);
@@ -148,6 +210,20 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	verifyButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' },
+	loadMoreButton: {
+		paddingVertical: 14,
+		alignItems: 'center',
+		backgroundColor: '#FFFFFF',
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: '#FFA500',
+		marginVertical: 20,
+	},
+	loadMoreText: {
+		color: '#FFA500',
+		fontSize: 14,
+		fontWeight: 'bold',
+	},
 });
 
 export default LandlordPayments;

@@ -3,6 +3,7 @@ import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Image, Dimensions
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth, db } from "./config/firebase";
 import { collection, addDoc } from 'firebase/firestore';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +18,11 @@ const PropertyDetail = ({ navigation, route }) => {
 	const propertyLandlordId = landlordId || property.landlordId;
 	const isLandlord = propertyLandlordId && currentUserId === propertyLandlordId;
 
+	const [showPicker, setShowPicker] = useState(false);
+	const [pickerMode, setPickerMode] = useState('date');
+	const [visitDate, setVisitDate] = useState(new Date());
+	const [dateSelected, setDateSelected] = useState(false);
+
 	const handleEdit = () => {
 		navigation.navigate('EditProperty', { property, userId: currentUserId });
 	};
@@ -26,18 +32,40 @@ const PropertyDetail = ({ navigation, route }) => {
 	};
 
 	const handleRequestVisit = async () => {
+		if (!dateSelected) {
+			setPickerMode('date');
+			setShowPicker(true);
+			return;
+		}
+
 		try {
 			await addDoc(collection(db, 'visits'), {
 				propertyId: property.id,
 				propertyName: property.name,
 				landlordId: propertyLandlordId,
 				studentId: currentUserId,
+				visitDate: visitDate.toISOString(),
 				status: 'pending',
 				createdAt: new Date().toISOString()
 			});
 			Alert.alert('Success', 'Visit requested successfully!');
+			setDateSelected(false);
 		} catch (e) {
 			Alert.alert('Error', 'Failed to request visit.');
+		}
+	};
+
+	const onDateChange = (event, selectedDate) => {
+		setShowPicker(false);
+		if (selectedDate) {
+			setVisitDate(selectedDate);
+			if (pickerMode === 'date') {
+				setPickerMode('time');
+				setTimeout(() => setShowPicker(true), 300);
+			} else {
+				setDateSelected(true);
+				Alert.alert('Date & Time Selected', 'Press "Request Visit" again to confirm booking.');
+			}
 		}
 	};
 
@@ -226,6 +254,17 @@ const PropertyDetail = ({ navigation, route }) => {
 					</TouchableOpacity>
 				</View>
 			</ScrollView>
+
+			{showPicker && (
+				<DateTimePicker
+					value={visitDate}
+					mode={pickerMode}
+					is24Hour={false}
+					display="default"
+					onChange={onDateChange}
+					minimumDate={new Date()}
+				/>
+			)}
 		</SafeAreaView>
 	);
 };
