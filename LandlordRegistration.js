@@ -138,6 +138,7 @@ const LandlordRegistration = ({ navigation }) => {
 				address,
 				propertyLocation,
 				proofUri, // Save the ImgBB URL instead of local URI
+				status: 'Pending Admin Approval',
 				createdAt: new Date().toISOString(),
 			};
 			await createUserProfile(user.uid, profile);
