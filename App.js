@@ -16,6 +16,7 @@ import BrowseProperties from './BrowseProperties';
 import Payments from './Payments';
 import Concerns from './Concerns';
 import MyBookings from './MyBookings';
+import LandlordRequests from './LandlordRequests';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -38,6 +39,7 @@ export default function App() {
 					<Stack.Screen name="Payments" component={Payments} options={{ headerShown: false }} />
 					<Stack.Screen name="Concerns" component={Concerns} options={{ headerShown: false }} />
 					<Stack.Screen name="MyBookings" component={MyBookings} options={{ headerShown: false }} />
+					<Stack.Screen name="LandlordRequests" component={LandlordRequests} options={{ headerShown: false }} />
 				</Stack.Navigator>
 			</NavigationContainer>
 		</SafeAreaProvider>

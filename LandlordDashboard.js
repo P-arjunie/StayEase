@@ -77,10 +77,13 @@ const LandlordDashboard = ({ navigation }) => {
 						<Text style={styles.statNumber}>{stats.activeProperties}</Text>
 						<Text style={styles.statLabel}>Active Properties</Text>
 					</View>
-					<View style={styles.statCard}>
+					<TouchableOpacity 
+						style={styles.statCard} 
+						onPress={() => navigation.navigate('LandlordRequests')}
+					>
 						<Text style={styles.statNumber}>{stats.pendingVisits}</Text>
 						<Text style={styles.statLabel}>Pending Visits</Text>
-					</View>
+					</TouchableOpacity>
 					<View style={styles.statCard}>
 						<Text style={styles.statNumber}>{stats.unresolvedIssues}</Text>
 						<Text style={styles.statLabel}>Unresolved Issues</Text>
