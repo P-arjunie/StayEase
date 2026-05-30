@@ -1,12 +1,24 @@
+/**
+ * @file GuardianDashboard.js
+ * @description Primary landing screen for the guardian. Displays high-level metrics, alerts, and navigation points.
+ * 
+ * @module screens/guardian/GuardianDashboard
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Alert } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
-import { db } from './config/firebase';
-import SelectPicker from './components/SelectPicker';
+import { db } from '../../config/firebase';
+import SelectPicker from '../../components/SelectPicker';
 
+/**
+ * Main Component: GuardianDashboard
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const GuardianDashboard = ({ navigation }) => {
 	const [loading, setLoading] = useState(true);
 	const [student, setStudent] = useState(null);

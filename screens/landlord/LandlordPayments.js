@@ -1,12 +1,24 @@
+/**
+ * @file LandlordPayments.js
+ * @description Renders the LandlordPayments screen for the landlord role.
+ * 
+ * @module screens/landlord/LandlordPayments
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image, RefreshControl } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs, doc, updateDoc, limit, startAfter, orderBy } from 'firebase/firestore';
-import { auth, db } from "./config/firebase";
+import { auth, db } from "../../config/firebase";
 
-const LandlordConcerns = ({ navigation }) => {
-	const [concerns, setConcerns] = useState([]);
+/**
+ * Main Component: LandlordPayments
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
+const LandlordPayments = ({ navigation }) => {
+	const [payments, setPayments] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [loadingMore, setLoadingMore] = useState(false);
 	const [lastVisible, setLastVisible] = useState(null);
@@ -17,24 +29,24 @@ const LandlordConcerns = ({ navigation }) => {
 	const currentUserId = auth.currentUser?.uid;
 
 	useEffect(() => {
-		loadConcerns();
+		loadPayments();
 	}, []);
 
-	const loadConcerns = async (isRefresh = false) => {
+	const loadPayments = async (isRefresh = false) => {
 		if (!currentUserId) return;
 		try {
 			if (!isRefresh) setLoading(true);
 			const q = query(
-				collection(db, 'concerns'), 
+				collection(db, 'payments'), 
 				where('landlordId', '==', currentUserId),
 				orderBy('createdAt', 'desc'),
 				limit(PAGE_SIZE)
 			);
 			const snapshot = await getDocs(q);
 			
-			const concernsList = [];
+			const paymentsList = [];
 			snapshot.forEach(doc => {
-				concernsList.push({ id: doc.id, ...doc.data() });
+				paymentsList.push({ id: doc.id, ...doc.data() });
 			});
 			
 			if (snapshot.docs.length > 0) {
@@ -43,10 +55,10 @@ const LandlordConcerns = ({ navigation }) => {
 			if (snapshot.docs.length < PAGE_SIZE) {
 				setHasMore(false);
 			}
-
-			setConcerns(concernsList);
+			
+			setPayments(paymentsList);
 		} catch (error) {
-			console.error("Error loading concerns:", error);
+			console.error("Error loading payments:", error);
 		} finally {
 			setLoading(false);
 			setRefreshing(false);
@@ -57,15 +69,15 @@ const LandlordConcerns = ({ navigation }) => {
 		setRefreshing(true);
 		setHasMore(true);
 		setLastVisible(null);
-		loadConcerns(true);
+		loadPayments(true);
 	};
 
-	const loadMoreConcerns = async () => {
+	const loadMorePayments = async () => {
 		if (!currentUserId || !lastVisible || loadingMore || !hasMore) return;
 		try {
 			setLoadingMore(true);
 			const q = query(
-				collection(db, 'concerns'), 
+				collection(db, 'payments'), 
 				where('landlordId', '==', currentUserId),
 				orderBy('createdAt', 'desc'),
 				startAfter(lastVisible),
@@ -73,9 +85,9 @@ const LandlordConcerns = ({ navigation }) => {
 			);
 			const snapshot = await getDocs(q);
 			
-			const concernsList = [];
+			const paymentsList = [];
 			snapshot.forEach(doc => {
-				concernsList.push({ id: doc.id, ...doc.data() });
+				paymentsList.push({ id: doc.id, ...doc.data() });
 			});
 			
 			if (snapshot.docs.length > 0) {
@@ -84,24 +96,24 @@ const LandlordConcerns = ({ navigation }) => {
 			if (snapshot.docs.length < PAGE_SIZE) {
 				setHasMore(false);
 			}
-
-			setConcerns(prev => [...prev, ...concernsList]);
+			
+			setPayments(prev => [...prev, ...paymentsList]);
 		} catch (error) {
-			console.error("Error loading more concerns:", error);
+			console.error("Error loading more payments:", error);
 		} finally {
 			setLoadingMore(false);
 		}
 	};
 
-	const handleUpdateStatus = async (concernId, newStatus) => {
+	const handleVerify = async (paymentId) => {
 		try {
-			const reqRef = doc(db, 'concerns', concernId);
-			await updateDoc(reqRef, { status: newStatus });
+			const reqRef = doc(db, 'payments', paymentId);
+			await updateDoc(reqRef, { status: 'verified' });
 			
-			Toast.show({ type: 'success', text1: 'Success', text2: `Concern marked as ${newStatus}` });
-			loadConcerns();
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Payment verified successfully.' });
+			loadPayments();
 		} catch (error) {
-			Alert.alert('Error', 'Failed to update concern status.');
+			Alert.alert('Error', 'Failed to verify payment.');
 			console.error(error);
 		}
 	};
@@ -112,7 +124,7 @@ const LandlordConcerns = ({ navigation }) => {
 				<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
 					<Text style={styles.backButtonText}>← Back</Text>
 				</TouchableOpacity>
-				<Text style={styles.headerTitle}>Tenant Concerns</Text>
+				<Text style={styles.headerTitle}>Tenant Payments</Text>
 			</View>
 
 			<ScrollView 
@@ -123,65 +135,53 @@ const LandlordConcerns = ({ navigation }) => {
 				{loading ? (
 					<View style={styles.centerContainer}>
 						<ActivityIndicator size="large" color="#FFA500" />
-						<Text style={styles.loadingText}>Loading concerns...</Text>
+						<Text style={styles.loadingText}>Loading payments...</Text>
 					</View>
-				) : concerns.length === 0 ? (
-					<Text style={styles.emptyText}>No concerns reported.</Text>
+				) : payments.length === 0 ? (
+					<Text style={styles.emptyText}>No payments received yet.</Text>
 				) : (
-					concerns.map(concern => (
-						<View key={concern.id} style={styles.card}>
+					payments.map(payment => (
+						<View key={payment.id} style={styles.card}>
 							<View style={styles.cardHeader}>
-								<Text style={styles.concernType}>
-									{concern.type === 'maintenance' ? '🔧 Maintenance' : concern.type === 'safety' ? '🛡️ Safety' : '📝 Other'}
+								<Text style={styles.paymentType}>
+									{payment.type === 'rent' ? '🏠 Rent' : payment.type === 'deposit' ? '💰 Deposit' : '⚡ Utility'}
 								</Text>
-								<View style={[
-									styles.statusBadge, 
-									concern.status === 'resolved' ? styles.statusResolved : 
-									concern.status === 'in-progress' ? styles.statusProgress : 
-									styles.statusPending
-								]}>
-									<Text style={styles.statusText}>{concern.status.toUpperCase()}</Text>
+								<View style={[styles.statusBadge, payment.status === 'verified' ? styles.statusVerified : styles.statusPending]}>
+									<Text style={styles.statusText}>{payment.status.toUpperCase()}</Text>
 								</View>
 							</View>
 							
-							<Text style={styles.title}>{concern.title}</Text>
-							<Text style={styles.description}>{concern.description}</Text>
-							{concern.image && (
-								<View style={styles.imageContainer}>
+							<Text style={styles.amount}>Rs {payment.amount?.toLocaleString()}</Text>
+							<Text style={styles.reference}>Ref: {payment.reference}</Text>
+							<Text style={styles.date}>Submitted: {new Date(payment.createdAt).toLocaleDateString()}</Text>
+
+							{payment.proofImage && (
+								<View style={styles.proofContainer}>
+									<Text style={styles.proofLabel}>Payment Proof:</Text>
 									<Image 
-										source={{ uri: concern.image }} 
-										style={styles.concernImage} 
+										source={{ uri: payment.proofImage }} 
+										style={styles.proofImage} 
 										resizeMode="cover"
 									/>
 								</View>
 							)}
 
-							<View style={styles.actionContainer}>
-								{concern.status !== 'resolved' && (
-									<TouchableOpacity 
-										style={[styles.actionButton, styles.resolveButton]} 
-										onPress={() => handleUpdateStatus(concern.id, 'resolved')}
-									>
-										<Text style={styles.actionButtonText}>Mark Resolved</Text>
-									</TouchableOpacity>
-								)}
-								{concern.status === 'pending' && (
-									<TouchableOpacity 
-										style={[styles.actionButton, styles.progressButton]} 
-										onPress={() => handleUpdateStatus(concern.id, 'in-progress')}
-									>
-										<Text style={styles.actionButtonText}>Mark In-Progress</Text>
-									</TouchableOpacity>
-								)}
-							</View>
+							{payment.status === 'pending' && (
+								<TouchableOpacity 
+									style={styles.verifyButton} 
+									onPress={() => handleVerify(payment.id)}
+								>
+									<Text style={styles.verifyButtonText}>✓ Verify Payment</Text>
+								</TouchableOpacity>
+							)}
 						</View>
 					))
 				)}
 
-				{!loading && hasMore && concerns.length > 0 && (
+				{!loading && hasMore && payments.length > 0 && (
 					<TouchableOpacity 
 						style={styles.loadMoreButton} 
-						onPress={loadMoreConcerns}
+						onPress={loadMorePayments}
 						disabled={loadingMore}
 					>
 						{loadingMore ? (
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
 	container: { flex: 1, backgroundColor: '#F8F9FA' },
 	header: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: '#FFFFFF' },
 	backButton: { paddingRight: 15 },
-	backButtonText: { color: '#E74C3C', fontSize: 16, fontWeight: 'bold' },
+	backButtonText: { color: '#FFA500', fontSize: 16, fontWeight: 'bold' },
 	headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#36454F' },
 	scrollView: { flex: 1, padding: 20 },
 	centerContainer: { paddingVertical: 40, alignItems: 'center' },
@@ -211,8 +211,6 @@ const styles = StyleSheet.create({
 		padding: 16,
 		borderRadius: 12,
 		marginBottom: 15,
-		borderLeftWidth: 4,
-		borderLeftColor: '#E74C3C',
 		shadowColor: '#000',
 		shadowOpacity: 0.05,
 		shadowOffset: { width: 0, height: 2 },
@@ -220,26 +218,24 @@ const styles = StyleSheet.create({
 		elevation: 2,
 	},
 	cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-	concernType: { fontSize: 14, fontWeight: 'bold', color: '#36454F' },
+	paymentType: { fontSize: 16, fontWeight: 'bold', color: '#36454F' },
 	statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-	statusResolved: { backgroundColor: '#E8F5E9' },
-	statusProgress: { backgroundColor: '#E3F2FD' },
+	statusVerified: { backgroundColor: '#E8F5E9' },
 	statusPending: { backgroundColor: '#FFF3E0' },
-	statusText: { fontSize: 10, fontWeight: 'bold', color: '#36454F' },
-	title: { fontSize: 18, fontWeight: 'bold', color: '#E74C3C', marginBottom: 8 },
-	description: { fontSize: 14, color: '#555', marginBottom: 12, lineHeight: 20 },
-	imageContainer: { marginBottom: 12, borderRadius: 8, overflow: 'hidden' },
-	concernImage: { width: '100%', height: 200 },
-	actionContainer: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: '#E0E0E0', paddingTop: 16 },
-	actionButton: {
-		flex: 1,
-		paddingVertical: 10,
-		borderRadius: 6,
+	statusText: { fontSize: 11, fontWeight: 'bold', color: '#36454F' },
+	amount: { fontSize: 24, fontWeight: 'bold', color: '#FFA500', marginBottom: 4 },
+	reference: { fontSize: 14, color: '#36454F', marginBottom: 4 },
+	date: { fontSize: 12, color: '#757575', marginBottom: 12 },
+	proofContainer: { marginTop: 10, marginBottom: 16 },
+	proofLabel: { fontSize: 13, color: '#757575', marginBottom: 6 },
+	proofImage: { width: '100%', height: 150, borderRadius: 8, backgroundColor: '#E0E0E0' },
+	verifyButton: {
+		backgroundColor: '#4CAF50',
+		paddingVertical: 12,
+		borderRadius: 8,
 		alignItems: 'center',
 	},
-	actionButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold' },
-	resolveButton: { backgroundColor: '#4CAF50' },
-	progressButton: { backgroundColor: '#FFA500' },
+	verifyButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: 'bold' },
 	loadMoreButton: {
 		paddingVertical: 14,
 		alignItems: 'center',
@@ -256,4 +252,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default LandlordConcerns;
+export default LandlordPayments;

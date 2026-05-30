@@ -1,11 +1,23 @@
+/**
+ * @file Concerns.js
+ * @description Renders the Concerns screen for the student role.
+ * 
+ * @module screens/student/Concerns
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, RefreshControl } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import { auth, db } from "./config/firebase";
-import SelectPicker from './components/SelectPicker';
+import { auth, db } from "../../config/firebase";
+import SelectPicker from '../../components/SelectPicker';
 
+/**
+ * Main Component: Concerns
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const Concerns = ({ navigation }) => {
 	const [concerns, setConcerns] = useState([]);
 	const [loading, setLoading] = useState(true);

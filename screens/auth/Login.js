@@ -1,15 +1,27 @@
+/**
+ * @file Login.js
+ * @description Renders the Login screen for the auth role.
+ * 
+ * @module screens/auth/Login
+ */
+
 import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { loginWithEmail, getUserProfile } from './config/firebase';
+import { loginWithEmail, getUserProfile } from '../../config/firebase';
 import { getAuth, signOut } from 'firebase/auth';
-import { handleError } from './utils/errorHandler';
+import { handleError } from '../../utils/errorHandler';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import AnimatedButton from './components/AnimatedButton';
+import AnimatedButton from '../../components/AnimatedButton';
 
 const auth = getAuth();
 
+/**
+ * Main Component: Login
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const Login = ({ navigation }) => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');

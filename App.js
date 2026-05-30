@@ -7,27 +7,31 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 
-import Login from './Login';
-import RoleSelection from './RoleSelection';
-import StudentRegistration from './StudentRegistration';
-import LandlordRegistration from './LandlordRegistration';
-import StudentDashboard from './StudentDashboard';
-import LandlordDashboard from './LandlordDashboard';
-import AddProperty from './AddProperty';
-import PropertyDetail from './PropertyDetail';
-import EditProperty from './EditProperty';
-import BrowseProperties from './BrowseProperties';
-import Payments from './Payments';
-import Concerns from './Concerns';
-import MyBookings from './MyBookings';
-import LandlordRequests from './LandlordRequests';
-import LandlordPayments from './LandlordPayments';
-import LandlordConcerns from './LandlordConcerns';
-import GuardianLogin from './GuardianLogin';
-import GuardianDashboard from './GuardianDashboard';
-import GuardianBookings from './GuardianBookings';
-import GuardianPayments from './GuardianPayments';
-import GuardianConcerns from './GuardianConcerns';
+import Login from './screens/auth/Login';
+import RoleSelection from './screens/auth/RoleSelection';
+import StudentRegistration from './screens/auth/StudentRegistration';
+import LandlordRegistration from './screens/auth/LandlordRegistration';
+import GuardianLogin from './screens/auth/GuardianLogin';
+
+import StudentDashboard from './screens/student/StudentDashboard';
+import BrowseProperties from './screens/student/BrowseProperties';
+import Payments from './screens/student/Payments';
+import Concerns from './screens/student/Concerns';
+import MyBookings from './screens/student/MyBookings';
+
+import LandlordDashboard from './screens/landlord/LandlordDashboard';
+import AddProperty from './screens/landlord/AddProperty';
+import EditProperty from './screens/landlord/EditProperty';
+import LandlordRequests from './screens/landlord/LandlordRequests';
+import LandlordPayments from './screens/landlord/LandlordPayments';
+import LandlordConcerns from './screens/landlord/LandlordConcerns';
+
+import GuardianDashboard from './screens/guardian/GuardianDashboard';
+import GuardianBookings from './screens/guardian/GuardianBookings';
+import GuardianPayments from './screens/guardian/GuardianPayments';
+import GuardianConcerns from './screens/guardian/GuardianConcerns';
+
+import PropertyDetail from './screens/common/PropertyDetail';
 
 enableScreens();
 const Stack = createNativeStackNavigator();

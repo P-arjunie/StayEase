@@ -1,7 +1,19 @@
+/**
+ * @file RoleSelection.js
+ * @description Renders the RoleSelection screen for the auth role.
+ * 
+ * @module screens/auth/RoleSelection
+ */
+
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+/**
+ * Main Component: RoleSelection
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const RoleSelection = ({ navigation }) => {
 	return (
 		<SafeAreaView style={styles.container}>

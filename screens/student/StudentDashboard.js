@@ -1,11 +1,23 @@
+/**
+ * @file StudentDashboard.js
+ * @description Primary landing screen for the student. Displays high-level metrics, alerts, and navigation points.
+ * 
+ * @module screens/student/StudentDashboard
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { auth, getUserProfile } from "./config/firebase";
+import { auth, getUserProfile } from "../../config/firebase";
 import { Ionicons } from '@expo/vector-icons';
-import AnimatedButton from './components/AnimatedButton';
+import AnimatedButton from '../../components/AnimatedButton';
 import { LinearGradient } from 'expo-linear-gradient';
 
+/**
+ * Main Component: StudentDashboard
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const StudentDashboard = ({ navigation }) => {
 	const [userProfile, setUserProfile] = useState(null);
 

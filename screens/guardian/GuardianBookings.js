@@ -1,29 +1,40 @@
+/**
+ * @file GuardianBookings.js
+ * @description Renders the GuardianBookings screen for the guardian role.
+ * 
+ * @module screens/guardian/GuardianBookings
+ */
+
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { auth, db } from "./config/firebase";
+import { db } from "../../config/firebase";
 
-const MyBookings = ({ navigation }) => {
+/**
+ * Main Component: GuardianBookings
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
+const GuardianBookings = ({ navigation, route }) => {
+	const { studentId, studentName } = route.params || {};
+	
 	const [bookings, setBookings] = useState([]);
 	const [visits, setVisits] = useState([]);
 	const [loading, setLoading] = useState(true);
-	const [refreshing, setRefreshing] = useState(false);
-	const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' or 'visits'
-
-	const currentUserId = auth.currentUser?.uid;
+	const [activeTab, setActiveTab] = useState('bookings');
 
 	useEffect(() => {
 		loadData();
-	}, []);
+	}, [studentId]);
 
-	const loadData = async (isRefresh = false) => {
-		if (!currentUserId) return;
+	const loadData = async () => {
+		if (!studentId) return;
 		try {
-			if (!isRefresh) setLoading(true);
+			setLoading(true);
 			
 			// Load Bookings
-			const bq = query(collection(db, 'bookings'), where('studentId', '==', currentUserId));
+			const bq = query(collection(db, 'bookings'), where('studentId', '==', studentId));
 			const bSnap = await getDocs(bq);
 			const bList = [];
 			bSnap.forEach(doc => bList.push({ id: doc.id, ...doc.data() }));
@@ -31,7 +42,7 @@ const MyBookings = ({ navigation }) => {
 			setBookings(bList);
 
 			// Load Visits
-			const vq = query(collection(db, 'visits'), where('studentId', '==', currentUserId));
+			const vq = query(collection(db, 'visits'), where('studentId', '==', studentId));
 			const vSnap = await getDocs(vq);
 			const vList = [];
 			vSnap.forEach(doc => vList.push({ id: doc.id, ...doc.data() }));
@@ -42,13 +53,7 @@ const MyBookings = ({ navigation }) => {
 			console.error("Error loading tracking data:", error);
 		} finally {
 			setLoading(false);
-			setRefreshing(false);
 		}
-	};
-
-	const onRefresh = () => {
-		setRefreshing(true);
-		loadData(true);
 	};
 
 	const getStatusColor = (status) => {
@@ -73,7 +78,10 @@ const MyBookings = ({ navigation }) => {
 				<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
 					<Text style={styles.backButtonText}>← Back</Text>
 				</TouchableOpacity>
-				<Text style={styles.headerTitle}>Tracking</Text>
+				<View>
+					<Text style={styles.headerTitle}>Student Activity</Text>
+					<Text style={styles.headerSubtitle}>{studentName}</Text>
+				</View>
 			</View>
 
 			<View style={styles.tabContainer}>
@@ -81,26 +89,24 @@ const MyBookings = ({ navigation }) => {
 					style={[styles.tab, activeTab === 'bookings' && styles.activeTab]} 
 					onPress={() => setActiveTab('bookings')}
 				>
-					<Text style={[styles.tabText, activeTab === 'bookings' && styles.activeTabText]}>My Bookings</Text>
+					<Text style={[styles.tabText, activeTab === 'bookings' && styles.activeTabText]}>Bookings</Text>
 				</TouchableOpacity>
 				<TouchableOpacity 
 					style={[styles.tab, activeTab === 'visits' && styles.activeTab]} 
 					onPress={() => setActiveTab('visits')}
 				>
-					<Text style={[styles.tabText, activeTab === 'visits' && styles.activeTabText]}>My Visits</Text>
+					<Text style={[styles.tabText, activeTab === 'visits' && styles.activeTabText]}>Visits</Text>
 				</TouchableOpacity>
 			</View>
 
-			<ScrollView 
-				style={styles.scrollView} 
-				showsVerticalScrollIndicator={false}
-				refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#FFA500"]} />}
-			>
+			<ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 				{loading ? (
-					<Text style={styles.emptyText}>Loading data...</Text>
+					<View style={styles.centerContainer}>
+						<ActivityIndicator size="large" color="#2E7D32" />
+					</View>
 				) : activeTab === 'bookings' ? (
 					bookings.length === 0 ? (
-						<Text style={styles.emptyText}>You haven't requested any bookings yet.</Text>
+						<Text style={styles.emptyText}>No bookings found.</Text>
 					) : (
 						bookings.map(item => (
 							<View key={item.id} style={styles.card}>
@@ -122,7 +128,7 @@ const MyBookings = ({ navigation }) => {
 					)
 				) : (
 					visits.length === 0 ? (
-						<Text style={styles.emptyText}>You haven't requested any visits yet.</Text>
+						<Text style={styles.emptyText}>No visits found.</Text>
 					) : (
 						visits.map(item => (
 							<View key={item.id} style={styles.card}>
@@ -152,14 +158,16 @@ const styles = StyleSheet.create({
 	container: { flex: 1, backgroundColor: '#F8F9FA' },
 	header: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: '#FFFFFF' },
 	backButton: { paddingRight: 15 },
-	backButtonText: { color: '#FFA500', fontSize: 16, fontWeight: 'bold' },
-	headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#36454F' },
+	backButtonText: { color: '#2E7D32', fontSize: 16, fontWeight: 'bold' },
+	headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#36454F' },
+	headerSubtitle: { fontSize: 12, color: '#757575' },
 	tabContainer: { flexDirection: 'row', backgroundColor: '#FFFFFF', paddingHorizontal: 20, paddingBottom: 10 },
 	tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
-	activeTab: { borderBottomColor: '#FFA500' },
+	activeTab: { borderBottomColor: '#2E7D32' },
 	tabText: { fontSize: 15, color: '#757575', fontWeight: '600' },
-	activeTabText: { color: '#FFA500' },
+	activeTabText: { color: '#2E7D32' },
 	scrollView: { flex: 1, padding: 20 },
+	centerContainer: { paddingVertical: 40 },
 	emptyText: { color: '#757575', fontStyle: 'italic', textAlign: 'center', marginTop: 40 },
 	card: {
 		backgroundColor: '#FFFFFF',
@@ -171,6 +179,8 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 2 },
 		shadowRadius: 8,
 		elevation: 2,
+		borderLeftWidth: 4,
+		borderLeftColor: '#2E7D32'
 	},
 	propertyTitle: { fontSize: 18, fontWeight: 'bold', color: '#36454F', marginBottom: 10 },
 	row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
@@ -180,4 +190,4 @@ const styles = StyleSheet.create({
 	statusText: { fontSize: 11, fontWeight: 'bold' },
 });
 
-export default MyBookings;
+export default GuardianBookings;

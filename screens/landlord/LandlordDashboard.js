@@ -1,13 +1,25 @@
+/**
+ * @file LandlordDashboard.js
+ * @description Primary landing screen for the landlord. Displays high-level metrics, alerts, and navigation points.
+ * 
+ * @module screens/landlord/LandlordDashboard
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { auth } from "./config/firebase";
-import { getLandlordProperties } from "./config/firebase";
+import { auth } from "../../config/firebase";
+import { getLandlordProperties } from "../../config/firebase";
 import { Ionicons } from '@expo/vector-icons';
-import { PropertyCardSkeleton } from './components/SkeletonLoader';
-import AnimatedButton from './components/AnimatedButton';
+import { PropertyCardSkeleton } from '../../components/SkeletonLoader';
+import AnimatedButton from '../../components/AnimatedButton';
 import { LinearGradient } from 'expo-linear-gradient';
 
+/**
+ * Main Component: LandlordDashboard
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const LandlordDashboard = ({ navigation }) => {
 	const [properties, setProperties] = useState([]);
 	const [loading, setLoading] = useState(true);

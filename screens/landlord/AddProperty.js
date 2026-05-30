@@ -1,12 +1,24 @@
+/**
+ * @file AddProperty.js
+ * @description Renders the AddProperty screen for the landlord role.
+ * 
+ * @module screens/landlord/AddProperty
+ */
+
 import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, Image, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createProperty } from "./config/firebase";
-import { handleError } from "./utils/errorHandler";
-import { pickImage, convertToBase64 } from "./utils/imagePicker";
-import SelectPicker from './components/SelectPicker';
+import { createProperty } from "../../config/firebase";
+import { handleError } from "../../utils/errorHandler";
+import { pickImage, convertToBase64 } from "../../utils/imagePicker";
+import SelectPicker from '../../components/SelectPicker';
 
+/**
+ * Main Component: AddProperty
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const AddProperty = ({ navigation, route }) => {
 	const userId = route?.params?.userId;
 	

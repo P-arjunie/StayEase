@@ -1,13 +1,25 @@
+/**
+ * @file LandlordRegistration.js
+ * @description Handles the registration flow, validation, and account creation for a new auth.
+ * 
+ * @module screens/auth/LandlordRegistration
+ */
+
 import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import { registerWithEmail, createUserProfile } from './config/firebase';
-import { pickImage, convertToBase64 } from './utils/imagePicker';
-import { validateEmail, validateMobile, validatePassword, validateNIC } from './utils/validations';
-import { handleError } from './utils/errorHandler';
+import { registerWithEmail, createUserProfile } from '../../config/firebase';
+import { pickImage, convertToBase64 } from '../../utils/imagePicker';
+import { validateEmail, validateMobile, validatePassword, validateNIC } from '../../utils/validations';
+import { handleError } from '../../utils/errorHandler';
 import base64 from 'react-native-base64';
 
+/**
+ * Main Component: LandlordRegistration
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const LandlordRegistration = ({ navigation }) => {
 	const [fullName, setFullName] = useState('');
 	const [email, setEmail] = useState('');

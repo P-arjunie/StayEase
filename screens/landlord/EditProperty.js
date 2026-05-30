@@ -1,10 +1,22 @@
+/**
+ * @file EditProperty.js
+ * @description Renders the EditProperty screen for the landlord role.
+ * 
+ * @module screens/landlord/EditProperty
+ */
+
 import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, Switch, KeyboardAvoidingView, Platform } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { updateProperty } from "./config/firebase";
-import { handleError } from "./utils/errorHandler";
+import { updateProperty } from "../../config/firebase";
+import { handleError } from "../../utils/errorHandler";
 
+/**
+ * Main Component: EditProperty
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const EditProperty = ({ navigation, route }) => {
 	const { property } = route.params;
 	const userId = route?.params?.userId;

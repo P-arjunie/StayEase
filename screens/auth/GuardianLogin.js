@@ -1,11 +1,23 @@
+/**
+ * @file GuardianLogin.js
+ * @description Renders the GuardianLogin screen for the auth role.
+ * 
+ * @module screens/auth/GuardianLogin
+ */
+
 import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from './config/firebase';
-import { handleError } from './utils/errorHandler';
+import { db } from '../../config/firebase';
+import { handleError } from '../../utils/errorHandler';
 
+/**
+ * Main Component: GuardianLogin
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const GuardianLogin = ({ navigation }) => {
 	const [mobile, setMobile] = useState('');
 	const [otp, setOtp] = useState('');

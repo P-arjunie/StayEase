@@ -1,9 +1,21 @@
+/**
+ * @file GuardianConcerns.js
+ * @description Renders the GuardianConcerns screen for the guardian role.
+ * 
+ * @module screens/guardian/GuardianConcerns
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from "./config/firebase";
+import { db } from "../../config/firebase";
 
+/**
+ * Main Component: GuardianConcerns
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const GuardianConcerns = ({ navigation, route }) => {
 	const { studentId, studentName } = route.params || {};
 	

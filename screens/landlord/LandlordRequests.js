@@ -1,10 +1,22 @@
+/**
+ * @file LandlordRequests.js
+ * @description Renders the LandlordRequests screen for the landlord role.
+ * 
+ * @module screens/landlord/LandlordRequests
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Linking, RefreshControl } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from "./config/firebase";
+import { auth, db } from "../../config/firebase";
 
+/**
+ * Main Component: LandlordRequests
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const LandlordRequests = ({ navigation }) => {
 	const [requests, setRequests] = useState([]);
 	const [loading, setLoading] = useState(true);

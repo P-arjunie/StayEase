@@ -1,14 +1,26 @@
+/**
+ * @file StudentRegistration.js
+ * @description Handles the registration flow, validation, and account creation for a new auth.
+ * 
+ * @module screens/auth/StudentRegistration
+ */
+
 import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { registerWithEmail, createUserProfile } from './config/firebase';
-import SelectPicker from './components/SelectPicker';
-import AnimatedButton from './components/AnimatedButton';
+import { registerWithEmail, createUserProfile } from '../../config/firebase';
+import SelectPicker from '../../components/SelectPicker';
+import AnimatedButton from '../../components/AnimatedButton';
 import { LinearGradient } from 'expo-linear-gradient';
-import { validateEmail, validateMobile, validatePassword, validateBudgetRange, validateStudentID } from './utils/validations';
-import { handleError } from './utils/errorHandler';
+import { validateEmail, validateMobile, validatePassword, validateBudgetRange, validateStudentID } from '../../utils/validations';
+import { handleError } from '../../utils/errorHandler';
 
+/**
+ * Main Component: StudentRegistration
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const StudentRegistration = ({ navigation }) => {
 	const [fullName, setFullName] = useState('');
 	const [email, setEmail] = useState('');

@@ -1,13 +1,25 @@
+/**
+ * @file BrowseProperties.js
+ * @description Displays a searchable, filterable list of active properties for students to browse and apply to.
+ * 
+ * @module screens/student/BrowseProperties
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, TextInput, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, getDocs } from 'firebase/firestore';
-import { db, auth, getUserProfile } from "./config/firebase";
+import { db, auth, getUserProfile } from "../../config/firebase";
 import { Ionicons } from '@expo/vector-icons';
-import { PropertyCardSkeleton } from './components/SkeletonLoader';
-import AnimatedButton from './components/AnimatedButton';
+import { PropertyCardSkeleton } from '../../components/SkeletonLoader';
+import AnimatedButton from '../../components/AnimatedButton';
 import { LinearGradient } from 'expo-linear-gradient';
 
+/**
+ * Main Component: BrowseProperties
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const BrowseProperties = ({ navigation }) => {
 	const [properties, setProperties] = useState([]);
 	const [filteredProperties, setFilteredProperties] = useState([]);

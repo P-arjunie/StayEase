@@ -1,13 +1,25 @@
+/**
+ * @file PropertyDetail.js
+ * @description Shows in-depth details, images, and actions for a specific property.
+ * 
+ * @module screens/common/PropertyDetail
+ */
+
 import React, { useState } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Image, Dimensions, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { auth, db } from "./config/firebase";
+import { auth, db } from "../../config/firebase";
 import { collection, addDoc } from 'firebase/firestore';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
+/**
+ * Main Component: PropertyDetail
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const PropertyDetail = ({ navigation, route }) => {
 	const { property, landlordId } = route.params;
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);

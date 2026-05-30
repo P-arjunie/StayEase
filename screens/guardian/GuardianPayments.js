@@ -1,9 +1,21 @@
+/**
+ * @file GuardianPayments.js
+ * @description Renders the GuardianPayments screen for the guardian role.
+ * 
+ * @module screens/guardian/GuardianPayments
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from "./config/firebase";
+import { db } from "../../config/firebase";
 
+/**
+ * Main Component: GuardianPayments
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const GuardianPayments = ({ navigation, route }) => {
 	const { studentId, studentName } = route.params || {};
 	

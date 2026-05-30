@@ -1,12 +1,24 @@
+/**
+ * @file Payments.js
+ * @description Renders the Payments screen for the student role.
+ * 
+ * @module screens/student/Payments
+ */
+
 import React, { useState, useEffect } from "react";
 import { View, ScrollView, Text, TouchableOpacity, TextInput, StyleSheet, Alert, Image, RefreshControl } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
 import { collection, addDoc, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { auth, db } from "./config/firebase";
-import SelectPicker from './components/SelectPicker';
+import { auth, db } from "../../config/firebase";
+import SelectPicker from '../../components/SelectPicker';
 
+/**
+ * Main Component: Payments
+ * @param {object} props - Component props
+ * @param {object} props.navigation - React Navigation object
+ */
 const Payments = ({ navigation }) => {
 	const [payments, setPayments] = useState([]);
 	const [loading, setLoading] = useState(true);
