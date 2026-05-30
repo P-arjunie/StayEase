@@ -6,9 +6,11 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, RefreshControl, Modal, Alert, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import * as ImagePicker from 'expo-image-picker';
+import SignatureScreen from 'react-native-signature-canvas';
 import { auth, db } from "../../config/firebase";
 
 /**
@@ -22,6 +24,10 @@ const MyBookings = ({ navigation }) => {
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 	const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' or 'visits'
+	
+	const [contractModalVisible, setContractModalVisible] = useState(false);
+	const [selectedBooking, setSelectedBooking] = useState(null);
+	const [paymentProof, setPaymentProof] = useState(null);
 
 	const currentUserId = auth.currentUser?.uid;
 
@@ -61,6 +67,45 @@ const MyBookings = ({ navigation }) => {
 	const onRefresh = () => {
 		setRefreshing(true);
 		loadData(true);
+	};
+
+	const openSignModal = (booking) => {
+		setSelectedBooking(booking);
+		setPaymentProof(null);
+		setContractModalVisible(true);
+	};
+
+	const pickImage = async () => {
+		let result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ['images'],
+			allowsEditing: true,
+			aspect: [3, 4],
+			quality: 0.8,
+		});
+		if (!result.canceled) {
+			setPaymentProof(result.assets[0].uri);
+		}
+	};
+
+	const handleSignature = async (signature) => {
+		if (!paymentProof) {
+			Alert.alert('Missing Payment Proof', 'Please upload your payment proof before signing the contract.');
+			return;
+		}
+
+		try {
+			const bRef = doc(db, 'bookings', selectedBooking.id);
+			await updateDoc(bRef, {
+				status: 'pending_final_approval',
+				studentSignature: signature,
+				paymentProofImage: paymentProof
+			});
+			Toast.show({ type: 'success', text1: 'Success', text2: 'Contract signed and submitted!' });
+			setContractModalVisible(false);
+			loadData();
+		} catch (e) {
+			Alert.alert('Error', 'Failed to submit contract.');
+		}
 	};
 
 	const getStatusColor = (status) => {
@@ -129,6 +174,12 @@ const MyBookings = ({ navigation }) => {
 										</Text>
 									</View>
 								</View>
+
+								{item.status === 'in_review' && (
+									<TouchableOpacity style={styles.signButton} onPress={() => openSignModal(item)}>
+										<Text style={styles.signButtonText}>Sign Contract & Pay</Text>
+									</TouchableOpacity>
+								)}
 							</View>
 						))
 					)
@@ -156,6 +207,49 @@ const MyBookings = ({ navigation }) => {
 					)
 				)}
 			</ScrollView>
+
+			<Modal visible={contractModalVisible} animationType="slide">
+				<SafeAreaView style={styles.modalContainer}>
+					<View style={styles.modalHeader}>
+						<Text style={styles.modalTitle}>Lease Agreement</Text>
+						<TouchableOpacity onPress={() => setContractModalVisible(false)}>
+							<Text style={styles.closeText}>Cancel</Text>
+						</TouchableOpacity>
+					</View>
+
+					<ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+						<View style={styles.termsBox}>
+							<Text style={styles.termsTitle}>Required Down Payment:</Text>
+							<Text style={styles.termsValue}>Rs {selectedBooking?.downPaymentAmount}</Text>
+							
+							<Text style={[styles.termsTitle, {marginTop: 15}]}>Terms & Rules:</Text>
+							<Text style={styles.termsText}>{selectedBooking?.contractTerms}</Text>
+						</View>
+
+						<Text style={styles.sectionLabel}>1. Upload Payment Proof</Text>
+						<TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
+							{paymentProof ? (
+								<Text style={styles.uploadBtnSuccess}>✓ Image Selected</Text>
+							) : (
+								<Text style={styles.uploadBtnText}>Select Receipt Image</Text>
+							)}
+						</TouchableOpacity>
+
+						<Text style={styles.sectionLabel}>2. Draw Your Signature Below</Text>
+						<View style={styles.signatureContainer}>
+							<SignatureScreen
+								onOK={handleSignature}
+								onEmpty={() => Alert.alert("Empty", "Please provide a signature.")}
+								descriptionText="Sign inside the box"
+								clearText="Clear"
+								confirmText="Save & Submit"
+								webStyle={`.m-signature-pad {box-shadow: none; border: none; margin: 0px; padding: 0px;} 
+										  .m-signature-pad--body {border: 1px solid #e8e8e8;}`}
+							/>
+						</View>
+					</ScrollView>
+				</SafeAreaView>
+			</Modal>
 		</SafeAreaView>
 	);
 };
@@ -190,6 +284,22 @@ const styles = StyleSheet.create({
 	value: { fontSize: 14, fontWeight: '600', color: '#36454F' },
 	statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
 	statusText: { fontSize: 11, fontWeight: 'bold' },
+	signButton: { backgroundColor: '#4CAF50', padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 15 },
+	signButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
+	modalContainer: { flex: 1, backgroundColor: '#F8F9FA' },
+	modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#E0E0E0' },
+	modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#36454F' },
+	closeText: { color: '#F44336', fontWeight: 'bold', fontSize: 16 },
+	modalScroll: { flex: 1, padding: 20 },
+	termsBox: { backgroundColor: '#FFF', padding: 15, borderRadius: 8, marginBottom: 20, borderWidth: 1, borderColor: '#E0E0E0' },
+	termsTitle: { fontSize: 14, fontWeight: 'bold', color: '#757575', marginBottom: 5 },
+	termsValue: { fontSize: 18, fontWeight: 'bold', color: '#FFA500' },
+	termsText: { fontSize: 14, color: '#333', lineHeight: 22 },
+	sectionLabel: { fontSize: 16, fontWeight: 'bold', color: '#36454F', marginBottom: 10, marginTop: 10 },
+	uploadBtn: { backgroundColor: '#FFF', borderWidth: 2, borderColor: '#FFA500', borderStyle: 'dashed', padding: 20, borderRadius: 8, alignItems: 'center', marginBottom: 20 },
+	uploadBtnText: { color: '#757575', fontWeight: 'bold' },
+	uploadBtnSuccess: { color: 'green', fontWeight: 'bold' },
+	signatureContainer: { height: 300, backgroundColor: '#FFF', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#E0E0E0', marginBottom: 40 },
 });
 
 export default MyBookings;

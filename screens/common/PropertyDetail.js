@@ -6,10 +6,10 @@
  */
 
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Image, Dimensions, Alert } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Image, Dimensions, Alert, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth, db } from "../../config/firebase";
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Toast from 'react-native-toast-message';
 
@@ -35,6 +35,7 @@ const PropertyDetail = ({ navigation, route }) => {
 	const [pickerMode, setPickerMode] = useState('date');
 	const [visitDate, setVisitDate] = useState(new Date());
 	const [dateSelected, setDateSelected] = useState(false);
+	const [showVisitWarning, setShowVisitWarning] = useState(false);
 
 	const handleEdit = () => {
 		navigation.navigate('EditProperty', { property, userId: currentUserId });
@@ -84,6 +85,25 @@ const PropertyDetail = ({ navigation, route }) => {
 
 	const handleRequestBooking = async () => {
 		try {
+			// Check for visit first
+			const vq = query(collection(db, 'visits'), where('studentId', '==', currentUserId), where('propertyId', '==', property.id));
+			const vSnap = await getDocs(vq);
+			
+			if (vSnap.empty) {
+				setShowVisitWarning(true);
+				return;
+			}
+			
+			await proceedWithBooking();
+		} catch (e) {
+			console.error(e);
+			Alert.alert('Error', 'Failed to check visit status.');
+		}
+	};
+
+	const proceedWithBooking = async () => {
+		try {
+			setShowVisitWarning(false);
 			await addDoc(collection(db, 'bookings'), {
 				propertyId: property.id,
 				propertyName: property.name,
@@ -95,6 +115,24 @@ const PropertyDetail = ({ navigation, route }) => {
 			Toast.show({ type: 'success', text1: 'Success', text2: 'Booking requested successfully!' });
 		} catch (e) {
 			Alert.alert('Error', 'Failed to request booking.');
+		}
+	};
+
+	const handleMarkVisitAndBook = async () => {
+		try {
+			// Mark as visited now (auto approved)
+			await addDoc(collection(db, 'visits'), {
+				propertyId: property.id,
+				propertyName: property.name,
+				landlordId: propertyLandlordId,
+				studentId: currentUserId,
+				visitDate: new Date().toISOString(),
+				status: 'approved', 
+				createdAt: new Date().toISOString()
+			});
+			await proceedWithBooking();
+		} catch (e) {
+			Alert.alert('Error', 'Failed to mark visit.');
 		}
 	};
 
@@ -267,6 +305,34 @@ const PropertyDetail = ({ navigation, route }) => {
 					</TouchableOpacity>
 				</View>
 			</ScrollView>
+
+			{showVisitWarning && (
+				<Modal visible={showVisitWarning} transparent={true} animationType="fade">
+					<View style={styles.modalOverlay}>
+						<View style={styles.warningModalContent}>
+							<Text style={styles.warningModalTitle}>⚠️ Precaution Check</Text>
+							<Text style={styles.warningModalText}>
+								It appears you have not recorded a physical visit to this property yet. For your safety, we highly recommend visiting the property before booking.
+							</Text>
+							<Text style={styles.warningModalText}>
+								Have you already visited this property in person?
+							</Text>
+							
+							<TouchableOpacity style={styles.primaryModalButton} onPress={handleMarkVisitAndBook}>
+								<Text style={styles.primaryModalButtonText}>Yes, I have visited it</Text>
+							</TouchableOpacity>
+							
+							<TouchableOpacity style={styles.secondaryModalButton} onPress={proceedWithBooking}>
+								<Text style={styles.secondaryModalButtonText}>No, but Request Booking anyway</Text>
+							</TouchableOpacity>
+							
+							<TouchableOpacity style={styles.cancelModalButton} onPress={() => setShowVisitWarning(false)}>
+								<Text style={styles.cancelModalButtonText}>Cancel</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</Modal>
+			)}
 
 			{showPicker && (
 				<DateTimePicker
@@ -581,6 +647,16 @@ const styles = StyleSheet.create({
 		fontSize: 15,
 		fontWeight: 'bold',
 	},
+	modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+	warningModalContent: { backgroundColor: '#FFF', padding: 25, borderRadius: 12, width: '85%', elevation: 5 },
+	warningModalTitle: { fontSize: 20, fontWeight: 'bold', color: '#D32F2F', marginBottom: 15, textAlign: 'center' },
+	warningModalText: { fontSize: 14, color: '#333', marginBottom: 15, lineHeight: 20, textAlign: 'center' },
+	primaryModalButton: { backgroundColor: '#4CAF50', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
+	primaryModalButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
+	secondaryModalButton: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#FFA500', padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
+	secondaryModalButtonText: { color: '#FFA500', fontWeight: 'bold', fontSize: 14 },
+	cancelModalButton: { padding: 10, alignItems: 'center' },
+	cancelModalButtonText: { color: '#757575', fontWeight: 'bold' },
 });
 
 export default PropertyDetail;

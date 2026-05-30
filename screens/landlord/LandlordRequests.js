@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Linking, RefreshControl } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Linking, RefreshControl, Modal, TextInput, Image } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -22,6 +22,12 @@ const LandlordRequests = ({ navigation }) => {
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 	const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' or 'visits'
+	
+	const [contractModalVisible, setContractModalVisible] = useState(false);
+	const [finalReviewModalVisible, setFinalReviewModalVisible] = useState(false);
+	const [selectedRequest, setSelectedRequest] = useState(null);
+	const [downPayment, setDownPayment] = useState('');
+	const [contractTerms, setContractTerms] = useState('');
 
 	const currentUserId = auth.currentUser?.uid;
 
@@ -82,6 +88,52 @@ const LandlordRequests = ({ navigation }) => {
 		} catch (error) {
 			Alert.alert('Error', 'Failed to update request status.');
 			console.error(error);
+		}
+	};
+
+	const openContractModal = (req) => {
+		setSelectedRequest(req);
+		setDownPayment('');
+		setContractTerms('1. Rent is due on the 1st of every month.\\n2. Utilities are split evenly among tenants.\\n3. No loud noises after 10 PM.');
+		setContractModalVisible(true);
+	};
+
+	const sendContract = async () => {
+		if (!downPayment || !contractTerms) {
+			Alert.alert('Error', 'Please fill out all fields.');
+			return;
+		}
+		try {
+			const collectionName = activeTab === 'bookings' ? 'bookings' : 'visits';
+			const reqRef = doc(db, collectionName, selectedRequest.id);
+			await updateDoc(reqRef, { 
+				status: 'in_review',
+				downPaymentAmount: parseFloat(downPayment),
+				contractTerms: contractTerms
+			});
+			Toast.show({ type: 'success', text1: 'Success', text2: `Contract sent for student review.` });
+			setContractModalVisible(false);
+			loadRequests();
+		} catch (error) {
+			Alert.alert('Error', 'Failed to send contract.');
+		}
+	};
+
+	const openFinalReview = (req) => {
+		setSelectedRequest(req);
+		setFinalReviewModalVisible(true);
+	};
+
+	const finalApprove = async () => {
+		try {
+			const collectionName = activeTab === 'bookings' ? 'bookings' : 'visits';
+			const reqRef = doc(db, collectionName, selectedRequest.id);
+			await updateDoc(reqRef, { status: 'approved' });
+			Toast.show({ type: 'success', text1: 'Success', text2: `Booking officially approved!` });
+			setFinalReviewModalVisible(false);
+			loadRequests();
+		} catch (error) {
+			Alert.alert('Error', 'Failed to approve booking.');
 		}
 	};
 
@@ -160,16 +212,33 @@ const LandlordRequests = ({ navigation }) => {
 							{req.status === 'pending' && (
 								<View style={styles.actionsRow}>
 									<TouchableOpacity 
-										style={styles.approveButton} 
-										onPress={() => handleUpdateStatus(req.id, 'approved')}
+										style={styles.reviewButton} 
+										onPress={() => openContractModal(req)}
 									>
-										<Text style={styles.approveButtonText}>Approve</Text>
+										<Text style={styles.reviewButtonText}>Review & Send Contract</Text>
 									</TouchableOpacity>
 									<TouchableOpacity 
 										style={styles.rejectButton} 
 										onPress={() => handleUpdateStatus(req.id, 'rejected')}
 									>
 										<Text style={styles.rejectButtonText}>Reject</Text>
+									</TouchableOpacity>
+								</View>
+							)}
+
+							{req.status === 'in_review' && (
+								<View style={styles.actionsRow}>
+									<Text style={styles.waitingText}>⏳ Waiting for Student Signature & Payment</Text>
+								</View>
+							)}
+
+							{req.status === 'pending_final_approval' && (
+								<View style={styles.actionsRow}>
+									<TouchableOpacity 
+										style={styles.approveButton} 
+										onPress={() => openFinalReview(req)}
+									>
+										<Text style={styles.approveButtonText}>Verify Signed Contract & Payment</Text>
 									</TouchableOpacity>
 								</View>
 							)}
@@ -186,6 +255,77 @@ const LandlordRequests = ({ navigation }) => {
 					))
 				)}
 			</ScrollView>
+
+			{/* Contract Generation Modal */}
+			<Modal visible={contractModalVisible} transparent={true} animationType="slide">
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContent}>
+						<Text style={styles.modalTitle}>Draft Lease Agreement</Text>
+						
+						<Text style={styles.label}>Down Payment / Security Deposit (Rs)</Text>
+						<TextInput
+							style={styles.input}
+							placeholder="e.g. 50000"
+							keyboardType="numeric"
+							value={downPayment}
+							onChangeText={setDownPayment}
+						/>
+
+						<Text style={styles.label}>Lease Terms & Utility Rules</Text>
+						<TextInput
+							style={[styles.input, styles.textArea]}
+							multiline
+							numberOfLines={5}
+							value={contractTerms}
+							onChangeText={setContractTerms}
+						/>
+
+						<TouchableOpacity style={styles.sendContractBtn} onPress={sendContract}>
+							<Text style={styles.sendContractBtnText}>Send to Student for Signature</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.cancelBtn} onPress={() => setContractModalVisible(false)}>
+							<Text style={styles.cancelBtnText}>Cancel</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
+
+			{/* Final Review Modal */}
+			<Modal visible={finalReviewModalVisible} transparent={true} animationType="slide">
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContentLarge}>
+						<Text style={styles.modalTitle}>Final Review: {selectedRequest?.studentName}</Text>
+						
+						<ScrollView style={styles.modalScroll}>
+							<Text style={styles.sectionTitle}>Student's Signature</Text>
+							{selectedRequest?.studentSignature ? (
+								<Image 
+									source={{ uri: selectedRequest.studentSignature }} 
+									style={styles.signatureImage} 
+									resizeMode="contain" 
+								/>
+							) : <Text>No signature provided.</Text>}
+
+							<Text style={[styles.sectionTitle, { marginTop: 20 }]}>Payment Proof</Text>
+							{selectedRequest?.paymentProofImage ? (
+								<Image 
+									source={{ uri: selectedRequest.paymentProofImage }} 
+									style={styles.proofImage} 
+									resizeMode="contain" 
+								/>
+							) : <Text>No payment proof provided.</Text>}
+						</ScrollView>
+
+						<TouchableOpacity style={styles.sendContractBtn} onPress={finalApprove}>
+							<Text style={styles.sendContractBtnText}>✓ Officially Approve Booking</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.cancelBtn} onPress={() => setFinalReviewModalVisible(false)}>
+							<Text style={styles.cancelBtnText}>Close</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
+
 		</SafeAreaView>
 	);
 };
@@ -232,8 +372,16 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	approveButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold' },
-	rejectButton: {
+	reviewButton: {
 		flex: 1,
+		backgroundColor: '#2196F3',
+		paddingVertical: 10,
+		borderRadius: 6,
+		alignItems: 'center',
+	},
+	reviewButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: 'bold' },
+	rejectButton: {
+		flex: 0.5,
 		backgroundColor: '#FFFFFF',
 		borderColor: '#F44336',
 		borderWidth: 1,
@@ -252,6 +400,21 @@ const styles = StyleSheet.create({
 		marginTop: 10,
 	},
 	callButtonText: { color: '#36454F', fontSize: 13, fontWeight: 'bold' },
+	waitingText: { color: '#FFA500', fontStyle: 'italic', fontSize: 13, textAlign: 'center', flex: 1 },
+	modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+	modalContent: { backgroundColor: '#FFF', padding: 20, width: '90%', borderRadius: 12 },
+	modalContentLarge: { backgroundColor: '#FFF', padding: 20, width: '95%', height: '85%', borderRadius: 12 },
+	modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#36454F', marginBottom: 20, textAlign: 'center' },
+	modalScroll: { flex: 1, marginBottom: 15 },
+	input: { backgroundColor: '#F5F7FA', borderWidth: 1, borderColor: '#E0E0E0', padding: 12, borderRadius: 8, marginBottom: 15 },
+	textArea: { height: 100, textAlignVertical: 'top' },
+	sendContractBtn: { backgroundColor: '#4CAF50', padding: 15, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
+	sendContractBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
+	cancelBtn: { padding: 10, alignItems: 'center' },
+	cancelBtnText: { color: '#757575', fontWeight: 'bold' },
+	sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#36454F', marginBottom: 10 },
+	signatureImage: { width: '100%', height: 150, backgroundColor: '#F8F9FA', borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8 },
+	proofImage: { width: '100%', height: 300, backgroundColor: '#F8F9FA', borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8 },
 });
 
 export default LandlordRequests;
