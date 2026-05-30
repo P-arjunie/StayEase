@@ -32,11 +32,12 @@ const SelectPicker = ({ selectedValue, onValueChange, items, style, containerSty
 
 	// Mobile: use React Native Picker
 	return (
-		<View style={containerStyle}>
+		<View style={[containerStyle, { overflow: 'hidden', justifyContent: 'center' }]}>
 			<Picker
 				selectedValue={selectedValue}
 				onValueChange={onValueChange}
-				style={style}
+				style={[style, Platform.OS === 'ios' && { height: 50, justifyContent: 'center' }]}
+				itemStyle={Platform.OS === 'ios' ? { height: 50, fontSize: 14 } : undefined}
 			>
 				{items.map((item) => (
 					<Picker.Item key={item.value} label={item.label} value={item.value} />

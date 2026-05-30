@@ -202,23 +202,33 @@ const LandlordRegistration = ({ navigation }) => {
 							<View style={styles.field}>
 								<Text style={styles.label}>Password *</Text>
 								<TextInput
-									style={styles.input}
+									style={[styles.input, password && !validatePassword(password) ? styles.inputError : null]}
 									placeholder="Enter your password"
 									value={password}
 									onChangeText={setPassword}
 									secureTextEntry
 								/>
+								{password.length > 0 && !validatePassword(password) && (
+									<Text style={styles.validationErrorText}>
+										Must be at least 8 chars, 1 uppercase, 1 lowercase, 1 number.
+									</Text>
+								)}
 							</View>
 							{/* Confirm Password */}
 							<View style={styles.field}>
 								<Text style={styles.label}>Confirm Password *</Text>
 								<TextInput
-									style={styles.input}
+									style={[styles.input, confirmPassword && password !== confirmPassword ? styles.inputError : null]}
 									placeholder="Confirm your password"
 									value={confirmPassword}
 									onChangeText={setConfirmPassword}
 									secureTextEntry
 								/>
+								{confirmPassword.length > 0 && password !== confirmPassword && (
+									<Text style={styles.validationErrorText}>
+										Passwords do not match.
+									</Text>
+								)}
 							</View>
 							{/* NIC */}
 							<View style={styles.field}>
@@ -336,11 +346,20 @@ const styles = StyleSheet.create({
 		borderColor: "#D3D3D3",
 		borderRadius: 8,
 		borderWidth: 1,
-		paddingTop: 13,
-		paddingBottom: 14,
+		paddingVertical: 13,
 		paddingHorizontal: 16,
 		fontSize: 13,
 		color: "#36454F",
+	},
+	inputError: {
+		borderColor: "#E74C3C",
+		borderWidth: 1.5,
+	},
+	validationErrorText: {
+		color: "#E74C3C",
+		fontSize: 11,
+		marginTop: 4,
+		marginLeft: 4,
 	},
 	uploadButton: {
 		backgroundColor: "#F5F5F5",
